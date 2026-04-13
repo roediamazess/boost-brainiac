@@ -173,8 +173,8 @@ export default function PublicStorefront() {
         </div>
       </section>
 
-      {/* ─── SEARCH ─── */}
-      <div className="max-w-6xl mx-auto px-4 py-5">
+      {/* ─── SEARCH & FILTERS ─── */}
+      <div className="max-w-6xl mx-auto px-4 py-5 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -185,21 +185,32 @@ export default function PublicStorefront() {
               className="pl-9"
             />
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                  selectedCategory === cat
-                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                    : "bg-card text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground"
-                }`}
-              >
-                {cat === "Tops" ? "👕 Atasan" : cat === "Bottoms" ? "👖 Bawahan" : cat === "Accessories" ? "🎒 Aksesoris" : "📦 Semua"}
-              </button>
-            ))}
-          </div>
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+            <SelectTrigger className="w-[160px] h-9 text-xs">
+              <ArrowUpDown className="h-3 w-3 mr-1.5" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(sortLabels).map(([k, v]) => (
+                <SelectItem key={k} value={k} className="text-xs">{v}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                selectedCategory === cat
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-card text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground"
+              }`}
+            >
+              {cat === "Tops" ? "👕 Atasan" : cat === "Bottoms" ? "👖 Bawahan" : cat === "Accessories" ? "🎒 Aksesoris" : "📦 Semua"}
+            </button>
+          ))}
         </div>
       </div>
 
