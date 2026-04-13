@@ -48,13 +48,15 @@ export default function Webstore() {
   }, 0);
 
   const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
+    p.name.toLowerCase().includes(search.toLowerCase()) &&
+    (selectedCategory === "Semua" || p.category === selectedCategory)
   );
   const posFiltered = products.filter(
     (p) =>
       p.stock > 0 &&
       (p.name.toLowerCase().includes(posSearch.toLowerCase()) ||
-        p.sku.toLowerCase().includes(posSearch.toLowerCase()))
+        p.sku.toLowerCase().includes(posSearch.toLowerCase())) &&
+      (posCategory === "Semua" || p.category === posCategory)
   );
 
   const storeUrl = (slug: string) => `${window.location.origin}/store/${slug}`;
