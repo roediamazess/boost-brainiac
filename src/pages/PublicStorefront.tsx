@@ -20,6 +20,7 @@ export default function PublicStorefront() {
   const store = allStores.find((s) => s.slug === storeName);
 
   const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
