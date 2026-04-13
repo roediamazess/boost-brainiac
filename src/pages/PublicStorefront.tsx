@@ -28,16 +28,22 @@ export default function PublicStorefront() {
 
   const price = (p: Product) => getStorePrice(p.price, store?.markup ?? 0);
 
+  const categories = useMemo(
+    () => ["Semua", ...Array.from(new Set(products.map((p) => p.category)))],
+    []
+  );
   const availableProducts = useMemo(
     () => products.filter((p) => p.status !== "out"),
     []
   );
   const filtered = useMemo(
     () =>
-      availableProducts.filter((p) =>
-        p.name.toLowerCase().includes(search.toLowerCase())
+      availableProducts.filter(
+        (p) =>
+          p.name.toLowerCase().includes(search.toLowerCase()) &&
+          (selectedCategory === "Semua" || p.category === selectedCategory)
       ),
-    [search, availableProducts]
+    [search, selectedCategory, availableProducts]
   );
 
   const addToCart = (id: number) => {
