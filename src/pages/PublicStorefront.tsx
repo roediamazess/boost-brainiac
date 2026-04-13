@@ -47,15 +47,21 @@ export default function PublicStorefront() {
     () => products.filter((p) => p.status !== "out"),
     []
   );
-  const filtered = useMemo(
-    () =>
-      availableProducts.filter(
-        (p) =>
-          p.name.toLowerCase().includes(search.toLowerCase()) &&
-          (selectedCategory === "Semua" || p.category === selectedCategory)
-      ),
-    [search, selectedCategory, availableProducts]
-  );
+  const filtered = useMemo(() => {
+    const list = availableProducts.filter(
+      (p) =>
+        p.name.toLowerCase().includes(search.toLowerCase()) &&
+        (selectedCategory === "Semua" || p.category === selectedCategory)
+    );
+    const sorted = [...list];
+    switch (sortBy) {
+      case "price_asc": return sorted.sort((a, b) => getStorePrice(a.price, store?.markup ?? 0) - getStorePrice(b.price, store?.markup ?? 0));
+      case "price_desc": return sorted.sort((a, b) => getStorePrice(b.price, store?.markup ?? 0) - getStorePrice(a.price, store?.markup ?? 0));
+      case "bestseller": return sorted.sort((a, b) => b.sold - a.sold);
+      case "rating": return sorted.sort((a, b) => b.rating - a.rating);
+      default: return sorted;
+    }
+  }, [search, selectedCategory, sortBy, availableProducts, store?.markup]);
 
   const addToCart = (id: number) => {
     setCart((c) => {
