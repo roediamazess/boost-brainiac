@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import {
 type CartItem = { id: number; qty: number };
 
 export default function PublicStorefront() {
+  const navigate = useNavigate();
   const { storeName } = useParams<{ storeName: string }>();
   const store = allStores.find((s) => s.slug === storeName);
 
@@ -328,7 +329,20 @@ export default function PublicStorefront() {
                   <span className="text-muted-foreground">Total ({cartCount} item)</span>
                   <span className="text-lg font-bold text-primary">{formatRp(cartTotal)}</span>
                 </div>
-                <Button className="w-full h-12 gap-2 text-sm" onClick={whatsappCheckout}>
+                <Button
+                  className="w-full h-12 gap-2 text-sm"
+                  onClick={() => {
+                    setCartOpen(false);
+                    navigate(`/store/${storeName}/checkout`, { state: { cart } });
+                  }}
+                >
+                  <ShoppingCart className="h-4 w-4" /> Checkout Sekarang
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full h-10 gap-2 text-xs"
+                  onClick={whatsappCheckout}
+                >
                   <MessageCircle className="h-4 w-4" /> Checkout via WhatsApp
                 </Button>
                 {checkoutDone && (
