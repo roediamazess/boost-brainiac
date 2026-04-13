@@ -3,14 +3,24 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   ShoppingCart, Search, Star, Heart, Plus, Minus, Trash2,
-  X, MessageCircle, Store, ArrowLeft, CheckCircle2,
+  X, MessageCircle, Store, ArrowLeft, CheckCircle2, ArrowUpDown,
 } from "lucide-react";
 import {
   products, allStores, formatRp, getStorePrice,
   type Product, type StoreInfo,
 } from "@/data/store-data";
+
+type SortOption = "default" | "price_asc" | "price_desc" | "bestseller" | "rating";
+const sortLabels: Record<SortOption, string> = {
+  default: "Default",
+  price_asc: "Harga Terendah",
+  price_desc: "Harga Tertinggi",
+  bestseller: "Terlaris",
+  rating: "Rating Tertinggi",
+};
 
 type CartItem = { id: number; qty: number };
 
