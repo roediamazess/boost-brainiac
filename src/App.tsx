@@ -12,6 +12,7 @@ import LeadCRM from "./pages/LeadCRM";
 import Referrals from "./pages/Referrals";
 import Billing from "./pages/Billing";
 import PublicStorefront from "./pages/PublicStorefront";
+import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/billing" element={<Billing />} />
           </Route>
           <Route path="/store/:storeName" element={<PublicStorefront />} />
+          <Route path="/store/:storeName/checkout" element={<Checkout />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
