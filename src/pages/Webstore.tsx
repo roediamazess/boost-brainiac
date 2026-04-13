@@ -27,6 +27,10 @@ export default function Webstore() {
   ]);
   const [posSearch, setPosSearch] = useState("");
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("Semua");
+  const [posCategory, setPosCategory] = useState<string>("Semua");
+
+  const categories = ["Semua", ...Array.from(new Set(products.map((p) => p.category)))];
 
   const addToCart = (id: number) => {
     setCart((c) => {
