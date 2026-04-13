@@ -1,15 +1,17 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Store, ShoppingCart, Package, RefreshCw, Search, Heart,
   Star, Plus, Minus, Trash2, CreditCard, Banknote, QrCode,
   BarChart3, ArrowUpRight, Eye, ShoppingBag, Smartphone,
   Copy, Check, ExternalLink, Users, Percent, Link as LinkIcon,
+  Settings, ArrowUpDown, Pencil, Trash, FolderPlus, PackagePlus,
 } from "lucide-react";
 import {
   products, ownerStore, resellerStores, formatRp, getStorePrice,
@@ -17,6 +19,29 @@ import {
 } from "@/data/store-data";
 
 type CartItem = { id: number; qty: number };
+type SortOption = "default" | "price_asc" | "price_desc" | "bestseller" | "rating";
+
+const sortLabels: Record<SortOption, string> = {
+  default: "Default",
+  price_asc: "Harga Terendah",
+  price_desc: "Harga Tertinggi",
+  bestseller: "Terlaris",
+  rating: "Rating Tertinggi",
+};
+
+const sortProducts = (list: Product[], sort: SortOption): Product[] => {
+  const sorted = [...list];
+  switch (sort) {
+    case "price_asc": return sorted.sort((a, b) => a.price - b.price);
+    case "price_desc": return sorted.sort((a, b) => b.price - a.price);
+    case "bestseller": return sorted.sort((a, b) => b.sold - a.sold);
+    case "rating": return sorted.sort((a, b) => b.rating - a.rating);
+    default: return sorted;
+  }
+};
+
+const categoryLabel = (cat: string) =>
+  cat === "Tops" ? "👕 Atasan" : cat === "Bottoms" ? "👖 Bawahan" : cat === "Accessories" ? "🎒 Aksesoris" : "📦 Semua";
 
 export default function Webstore() {
   const [aiManager, setAiManager] = useState(true);
@@ -29,6 +54,8 @@ export default function Webstore() {
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("Semua");
   const [posCategory, setPosCategory] = useState<string>("Semua");
+  const [storeSort, setStoreSort] = useState<SortOption>("default");
+  const [posSort, setPosSort] = useState<SortOption>("default");
 
   const categories = ["Semua", ...Array.from(new Set(products.map((p) => p.category)))];
 
@@ -47,17 +74,24 @@ export default function Webstore() {
     return s + (p ? p.price * ci.qty : 0);
   }, 0);
 
-  const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()) &&
-    (selectedCategory === "Semua" || p.category === selectedCategory)
-  );
-  const posFiltered = products.filter(
-    (p) =>
-      p.stock > 0 &&
-      (p.name.toLowerCase().includes(posSearch.toLowerCase()) ||
-        p.sku.toLowerCase().includes(posSearch.toLowerCase())) &&
-      (posCategory === "Semua" || p.category === posCategory)
-  );
+  const filteredProducts = useMemo(() => {
+    const filtered = products.filter((p) =>
+      p.name.toLowerCase().includes(search.toLowerCase()) &&
+      (selectedCategory === "Semua" || p.category === selectedCategory)
+    );
+    return sortProducts(filtered, storeSort);
+  }, [search, selectedCategory, storeSort]);
+
+  const posFiltered = useMemo(() => {
+    const filtered = products.filter(
+      (p) =>
+        p.stock > 0 &&
+        (p.name.toLowerCase().includes(posSearch.toLowerCase()) ||
+          p.sku.toLowerCase().includes(posSearch.toLowerCase())) &&
+        (posCategory === "Semua" || p.category === posCategory)
+    );
+    return sortProducts(filtered, posSort);
+  }, [posSearch, posCategory, posSort]);
 
   const storeUrl = (slug: string) => `${window.location.origin}/store/${slug}`;
 
@@ -73,6 +107,43 @@ export default function Webstore() {
     { name: "TikTok Shop", orders: 74, revenue: "Rp 12.8M", icon: "⚫" },
     { name: "Offline POS", orders: 213, revenue: "Rp 38.1M", icon: "🏪" },
   ];
+
+  const SortSelect = ({ value, onChange }: { value: SortOption; onChange: (v: SortOption) => void }) => (
+    <Select value={value} onValueChange={(v) => onChange(v as SortOption)}>
+      <SelectTrigger className="w-[160px] h-8 text-xs">
+        <ArrowUpDown className="h-3 w-3 mr-1.5" />
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {Object.entries(sortLabels).map(([k, v]) => (
+          <SelectItem key={k} value={k} className="text-xs">{v}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
+  const CategoryChips = ({ selected, onSelect, showCount = false }: { selected: string; onSelect: (c: string) => void; showCount?: boolean }) => (
+    <div className="flex items-center gap-2 flex-wrap">
+      {categories.map((cat) => (
+        <button
+          key={cat}
+          onClick={() => onSelect(cat)}
+          className={`px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${
+            selected === cat
+              ? "bg-primary text-primary-foreground border-primary shadow-sm"
+              : "bg-card text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground"
+          }`}
+        >
+          {categoryLabel(cat)}
+          {showCount && (
+            <span className="ml-1.5 text-[10px] opacity-70">
+              {cat === "Semua" ? products.filter(p => p.status !== "out").length : products.filter(p => p.category === cat && p.status !== "out").length}
+            </span>
+          )}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -114,7 +185,7 @@ export default function Webstore() {
 
       {/* Tabs */}
       <Tabs defaultValue="mystore" className="space-y-4">
-        <TabsList className="h-11 p-1">
+        <TabsList className="h-11 p-1 flex-wrap">
           <TabsTrigger value="mystore" className="gap-2 px-4">
             <LinkIcon className="h-4 w-4" /> Toko Saya
           </TabsTrigger>
@@ -126,6 +197,9 @@ export default function Webstore() {
           </TabsTrigger>
           <TabsTrigger value="inventory" className="gap-2 px-4">
             <Package className="h-4 w-4" /> Inventori
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="gap-2 px-4">
+            <Settings className="h-4 w-4" /> Pengaturan
           </TabsTrigger>
         </TabsList>
 
@@ -147,10 +221,7 @@ export default function Webstore() {
                       <span className="text-sm font-mono truncate">{storeUrl(ownerStore.slug)}</span>
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        onClick={() => copyLink(ownerStore.slug)}
-                        className="gap-2 shrink-0"
-                      >
+                      <Button onClick={() => copyLink(ownerStore.slug)} className="gap-2 shrink-0">
                         {copiedLink === ownerStore.slug ? (
                           <><Check className="h-4 w-4" /> Tersalin!</>
                         ) : (
@@ -169,29 +240,16 @@ export default function Webstore() {
             </CardContent>
           </Card>
 
-          {/* Product Preview */}
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-sm">Produk di Webstore</h3>
-            <Badge variant="secondary" className="text-xs">{filteredProducts.filter(p => p.status !== "out").length} aktif</Badge>
+          {/* Filters & Sort */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <h3 className="font-semibold text-sm">Produk di Webstore</h3>
+              <Badge variant="secondary" className="text-xs">{filteredProducts.filter(p => p.status !== "out").length} aktif</Badge>
+            </div>
+            <SortSelect value={storeSort} onChange={setStoreSort} />
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                  selectedCategory === cat
-                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                    : "bg-card text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground"
-                }`}
-              >
-                {cat === "Tops" ? "👕 Atasan" : cat === "Bottoms" ? "👖 Bawahan" : cat === "Accessories" ? "🎒 Aksesoris" : "📦 Semua"}
-                <span className="ml-1.5 text-[10px] opacity-70">
-                  {cat === "Semua" ? products.filter(p => p.status !== "out").length : products.filter(p => p.category === cat && p.status !== "out").length}
-                </span>
-              </button>
-            ))}
-          </div>
+          <CategoryChips selected={selectedCategory} onSelect={setSelectedCategory} showCount />
+
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
             {filteredProducts.filter(p => p.status !== "out").map((p) => (
               <Card key={p.id} className="overflow-hidden group">
@@ -199,6 +257,7 @@ export default function Webstore() {
                   <img src={p.img} alt={p.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
                 <CardContent className="p-3 space-y-1">
+                  <p className="text-[10px] text-muted-foreground">{categoryLabel(p.category)}</p>
                   <h4 className="text-xs font-semibold truncate">{p.name}</h4>
                   <p className="text-sm font-bold text-primary">{formatRp(p.price)}</p>
                   <div className="flex items-center gap-1">
@@ -254,10 +313,7 @@ export default function Webstore() {
                   <div className="flex items-center gap-2 bg-muted/40 rounded-lg px-3 py-2">
                     <LinkIcon className="h-3 w-3 text-muted-foreground shrink-0" />
                     <span className="text-xs font-mono truncate flex-1">/store/{rs.slug}</span>
-                    <button
-                      onClick={() => copyLink(rs.slug)}
-                      className="p-1 rounded hover:bg-muted transition-colors"
-                    >
+                    <button onClick={() => copyLink(rs.slug)} className="p-1 rounded hover:bg-muted transition-colors">
                       {copiedLink === rs.slug ? (
                         <Check className="h-3.5 w-3.5 text-success" />
                       ) : (
@@ -280,30 +336,19 @@ export default function Webstore() {
         <TabsContent value="pos">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             <div className="lg:col-span-3 space-y-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Scan barcode atau cari produk / SKU..."
-                  value={posSearch}
-                  onChange={(e) => setPosSearch(e.target.value)}
-                  className="pl-9 h-12 text-base"
-                />
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Scan barcode atau cari produk / SKU..."
+                    value={posSearch}
+                    onChange={(e) => setPosSearch(e.target.value)}
+                    className="pl-9 h-12 text-base"
+                  />
+                </div>
+                <SortSelect value={posSort} onChange={setPosSort} />
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setPosCategory(cat)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                      posCategory === cat
-                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                        : "bg-card text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground"
-                    }`}
-                  >
-                    {cat === "Tops" ? "👕 Atasan" : cat === "Bottoms" ? "👖 Bawahan" : cat === "Accessories" ? "🎒 Aksesoris" : "📦 Semua"}
-                  </button>
-                ))}
-              </div>
+              <CategoryChips selected={posCategory} onSelect={setPosCategory} />
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 {posFiltered.map((p) => (
                   <button
@@ -401,6 +446,7 @@ export default function Webstore() {
                     <tr className="border-b bg-muted/30 text-xs text-muted-foreground">
                       <th className="text-left py-3 px-4 font-medium">Produk</th>
                       <th className="text-left py-3 px-4 font-medium">SKU</th>
+                      <th className="text-left py-3 px-4 font-medium">Kategori</th>
                       <th className="text-right py-3 px-4 font-medium">Harga</th>
                       <th className="text-right py-3 px-4 font-medium">Stok POS</th>
                       <th className="text-right py-3 px-4 font-medium">Stok Online</th>
@@ -418,6 +464,9 @@ export default function Webstore() {
                           </div>
                         </td>
                         <td className="py-3 px-4 text-muted-foreground font-mono text-xs">{p.sku}</td>
+                        <td className="py-3 px-4">
+                          <Badge variant="outline" className="text-[10px]">{categoryLabel(p.category)}</Badge>
+                        </td>
                         <td className="py-3 px-4 text-right font-medium">{formatRp(p.price)}</td>
                         <td className="py-3 px-4 text-right">{p.stock}</td>
                         <td className="py-3 px-4 text-right">{p.online}</td>
@@ -436,6 +485,129 @@ export default function Webstore() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ─── SETTINGS TAB ──────────────────── */}
+        <TabsContent value="settings" className="space-y-6">
+          {/* Category Management */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold flex items-center gap-2"><FolderPlus className="h-4 w-4 text-muted-foreground" /> Manajemen Kategori</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Kelola kategori produk untuk webstore, reseller, dan POS.</p>
+              </div>
+              <Button size="sm" className="gap-1.5">
+                <Plus className="h-3.5 w-3.5" /> Tambah Kategori
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {["Tops", "Bottoms", "Accessories"].map((cat) => {
+                const count = products.filter(p => p.category === cat).length;
+                const activeCount = products.filter(p => p.category === cat && p.status !== "out").length;
+                return (
+                  <Card key={cat} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-xl">{cat === "Tops" ? "👕" : cat === "Bottoms" ? "👖" : "🎒"}</span>
+                          <div>
+                            <h4 className="font-semibold text-sm">{cat === "Tops" ? "Atasan" : cat === "Bottoms" ? "Bawahan" : "Aksesoris"}</h4>
+                            <p className="text-[10px] text-muted-foreground">{count} produk · {activeCount} aktif</p>
+                          </div>
+                        </div>
+                        <Badge variant="default" className="text-[10px]">Aktif</Badge>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
+                        <span>📦 Stok: {products.filter(p => p.category === cat).reduce((s, p) => s + p.stock, 0)}</span>
+                        <span>🛒 Terjual: {products.filter(p => p.category === cat).reduce((s, p) => s + p.sold, 0)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-[10px] gap-1"><Store className="h-2.5 w-2.5" /> Webstore</Badge>
+                        <Badge variant="outline" className="text-[10px] gap-1"><Users className="h-2.5 w-2.5" /> Reseller</Badge>
+                        <Badge variant="outline" className="text-[10px] gap-1"><ShoppingCart className="h-2.5 w-2.5" /> POS</Badge>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-3 pt-3 border-t">
+                        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs flex-1"><Pencil className="h-3 w-3" /> Edit</Button>
+                        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-destructive hover:text-destructive"><Trash className="h-3 w-3" /> Hapus</Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Product Management */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold flex items-center gap-2"><PackagePlus className="h-4 w-4 text-muted-foreground" /> Manajemen Produk</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Tambah, edit, atau hapus produk yang ditampilkan di semua channel.</p>
+              </div>
+              <Button size="sm" className="gap-1.5">
+                <Plus className="h-3.5 w-3.5" /> Tambah Produk
+              </Button>
+            </div>
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b bg-muted/30 text-xs text-muted-foreground">
+                        <th className="text-left py-3 px-4 font-medium">Produk</th>
+                        <th className="text-left py-3 px-4 font-medium">SKU</th>
+                        <th className="text-left py-3 px-4 font-medium">Kategori</th>
+                        <th className="text-right py-3 px-4 font-medium">Harga</th>
+                        <th className="text-right py-3 px-4 font-medium">Stok</th>
+                        <th className="text-center py-3 px-4 font-medium">Channel</th>
+                        <th className="text-center py-3 px-4 font-medium">Status</th>
+                        <th className="text-center py-3 px-4 font-medium">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {products.map((p) => (
+                        <tr key={p.sku} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-3">
+                              <img src={p.img} alt={p.name} className="h-9 w-9 rounded-lg object-cover" />
+                              <div>
+                                <span className="font-medium text-sm">{p.name}</span>
+                                <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{p.description}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-muted-foreground font-mono text-xs">{p.sku}</td>
+                          <td className="py-3 px-4">
+                            <Badge variant="outline" className="text-[10px]">{categoryLabel(p.category)}</Badge>
+                          </td>
+                          <td className="py-3 px-4 text-right font-medium">{formatRp(p.price)}</td>
+                          <td className="py-3 px-4 text-right">{p.stock}</td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center justify-center gap-1">
+                              <Badge variant="secondary" className="text-[9px] px-1.5">Web</Badge>
+                              <Badge variant="secondary" className="text-[9px] px-1.5">POS</Badge>
+                              <Badge variant="secondary" className="text-[9px] px-1.5">Reseller</Badge>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <Badge variant={p.status === "synced" ? "default" : p.status === "syncing" ? "secondary" : "destructive"} className="text-[10px]">
+                              {p.status === "synced" ? "✓ Aktif" : p.status === "syncing" ? "⟳ Sync" : "✕ Habis"}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0"><Pencil className="h-3.5 w-3.5" /></Button>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive"><Trash className="h-3.5 w-3.5" /></Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
