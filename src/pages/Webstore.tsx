@@ -289,6 +289,21 @@ export default function Webstore() {
                   className="pl-9 h-12 text-base"
                 />
               </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setPosCategory(cat)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                      posCategory === cat
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-card text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground"
+                    }`}
+                  >
+                    {cat === "Tops" ? "👕 Atasan" : cat === "Bottoms" ? "👖 Bawahan" : cat === "Accessories" ? "🎒 Aksesoris" : "📦 Semua"}
+                  </button>
+                ))}
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 {posFiltered.map((p) => (
                   <button
