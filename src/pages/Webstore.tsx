@@ -27,6 +27,10 @@ export default function Webstore() {
   ]);
   const [posSearch, setPosSearch] = useState("");
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("Semua");
+  const [posCategory, setPosCategory] = useState<string>("Semua");
+
+  const categories = ["Semua", ...Array.from(new Set(products.map((p) => p.category)))];
 
   const addToCart = (id: number) => {
     setCart((c) => {
@@ -44,13 +48,15 @@ export default function Webstore() {
   }, 0);
 
   const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
+    p.name.toLowerCase().includes(search.toLowerCase()) &&
+    (selectedCategory === "Semua" || p.category === selectedCategory)
   );
   const posFiltered = products.filter(
     (p) =>
       p.stock > 0 &&
       (p.name.toLowerCase().includes(posSearch.toLowerCase()) ||
-        p.sku.toLowerCase().includes(posSearch.toLowerCase()))
+        p.sku.toLowerCase().includes(posSearch.toLowerCase())) &&
+      (posCategory === "Semua" || p.category === posCategory)
   );
 
   const storeUrl = (slug: string) => `${window.location.origin}/store/${slug}`;
@@ -166,10 +172,28 @@ export default function Webstore() {
           {/* Product Preview */}
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-sm">Produk di Webstore</h3>
-            <Badge variant="secondary" className="text-xs">{products.filter(p => p.status !== "out").length} aktif</Badge>
+            <Badge variant="secondary" className="text-xs">{filteredProducts.filter(p => p.status !== "out").length} aktif</Badge>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                  selectedCategory === cat
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-card text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground"
+                }`}
+              >
+                {cat === "Tops" ? "👕 Atasan" : cat === "Bottoms" ? "👖 Bawahan" : cat === "Accessories" ? "🎒 Aksesoris" : "📦 Semua"}
+                <span className="ml-1.5 text-[10px] opacity-70">
+                  {cat === "Semua" ? products.filter(p => p.status !== "out").length : products.filter(p => p.category === cat && p.status !== "out").length}
+                </span>
+              </button>
+            ))}
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
-            {products.filter(p => p.status !== "out").map((p) => (
+            {filteredProducts.filter(p => p.status !== "out").map((p) => (
               <Card key={p.id} className="overflow-hidden group">
                 <div className="aspect-square overflow-hidden">
                   <img src={p.img} alt={p.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -264,6 +288,21 @@ export default function Webstore() {
                   onChange={(e) => setPosSearch(e.target.value)}
                   className="pl-9 h-12 text-base"
                 />
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setPosCategory(cat)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                      posCategory === cat
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-card text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground"
+                    }`}
+                  >
+                    {cat === "Tops" ? "👕 Atasan" : cat === "Bottoms" ? "👖 Bawahan" : cat === "Accessories" ? "🎒 Aksesoris" : "📦 Semua"}
+                  </button>
+                ))}
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 {posFiltered.map((p) => (
