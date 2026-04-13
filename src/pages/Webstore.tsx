@@ -172,10 +172,28 @@ export default function Webstore() {
           {/* Product Preview */}
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-sm">Produk di Webstore</h3>
-            <Badge variant="secondary" className="text-xs">{products.filter(p => p.status !== "out").length} aktif</Badge>
+            <Badge variant="secondary" className="text-xs">{filteredProducts.filter(p => p.status !== "out").length} aktif</Badge>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                  selectedCategory === cat
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-card text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground"
+                }`}
+              >
+                {cat === "Tops" ? "👕 Atasan" : cat === "Bottoms" ? "👖 Bawahan" : cat === "Accessories" ? "🎒 Aksesoris" : "📦 Semua"}
+                <span className="ml-1.5 text-[10px] opacity-70">
+                  {cat === "Semua" ? products.filter(p => p.status !== "out").length : products.filter(p => p.category === cat && p.status !== "out").length}
+                </span>
+              </button>
+            ))}
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
-            {products.filter(p => p.status !== "out").map((p) => (
+            {filteredProducts.filter(p => p.status !== "out").map((p) => (
               <Card key={p.id} className="overflow-hidden group">
                 <div className="aspect-square overflow-hidden">
                   <img src={p.img} alt={p.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
