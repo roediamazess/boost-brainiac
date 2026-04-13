@@ -126,10 +126,13 @@ export default function Checkout() {
             </CardContent>
           </Card>
           <div className="flex flex-col gap-2">
+            <Button className="w-full gap-2" onClick={() => navigate(`/track?id=ORD-2026041301`)}>
+              <Package className="h-4 w-4" /> Lacak Pesanan
+            </Button>
             <a href={`https://wa.me/${store.whatsapp}`} target="_blank" rel="noopener noreferrer">
-              <Button className="w-full gap-2"><MessageCircle className="h-4 w-4" /> Hubungi Penjual</Button>
+              <Button variant="outline" className="w-full gap-2"><MessageCircle className="h-4 w-4" /> Hubungi Penjual</Button>
             </a>
-            <Button variant="outline" onClick={() => navigate(`/store/${storeName}`)} className="w-full">
+            <Button variant="ghost" onClick={() => navigate(`/store/${storeName}`)} className="w-full">
               Kembali ke Toko
             </Button>
           </div>

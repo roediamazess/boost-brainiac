@@ -6,6 +6,7 @@ import {
   Users,
   Gift,
   CreditCard,
+  Package,
   Zap,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
@@ -27,6 +28,7 @@ const navItems = [
   { title: "AI Academy", url: "/academy", icon: GraduationCap },
   { title: "Webstore & POS", url: "/webstore", icon: Store },
   { title: "My AI Agents", url: "/agents", icon: Bot },
+  { title: "Pesanan", url: "/orders", icon: Package },
   { title: "Lead CRM", url: "/crm", icon: Users },
   { title: "Referral Hub", url: "/referrals", icon: Gift },
   { title: "Billing & Usage", url: "/billing", icon: CreditCard },
