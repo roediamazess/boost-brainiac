@@ -20,6 +20,7 @@ export default function PublicStorefront() {
   const store = allStores.find((s) => s.slug === storeName);
 
   const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -27,16 +28,22 @@ export default function PublicStorefront() {
 
   const price = (p: Product) => getStorePrice(p.price, store?.markup ?? 0);
 
+  const categories = useMemo(
+    () => ["Semua", ...Array.from(new Set(products.map((p) => p.category)))],
+    []
+  );
   const availableProducts = useMemo(
     () => products.filter((p) => p.status !== "out"),
     []
   );
   const filtered = useMemo(
     () =>
-      availableProducts.filter((p) =>
-        p.name.toLowerCase().includes(search.toLowerCase())
+      availableProducts.filter(
+        (p) =>
+          p.name.toLowerCase().includes(search.toLowerCase()) &&
+          (selectedCategory === "Semua" || p.category === selectedCategory)
       ),
-    [search, availableProducts]
+    [search, selectedCategory, availableProducts]
   );
 
   const addToCart = (id: number) => {
@@ -151,14 +158,31 @@ export default function PublicStorefront() {
 
       {/* ─── SEARCH ─── */}
       <div className="max-w-6xl mx-auto px-4 py-5">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Cari produk..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Cari produk..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                  selectedCategory === cat
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-card text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground"
+                }`}
+              >
+                {cat === "Tops" ? "👕 Atasan" : cat === "Bottoms" ? "👖 Bawahan" : cat === "Accessories" ? "🎒 Aksesoris" : "📦 Semua"}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
