@@ -5,20 +5,38 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Store, ShoppingCart, Package, RefreshCw, Search, Heart,
   Star, Plus, Minus, Trash2, CreditCard, Banknote, QrCode,
   BarChart3, ArrowUpRight, Eye, ShoppingBag, Smartphone,
   Copy, Check, ExternalLink, Users, Percent, Link as LinkIcon,
   Settings, ArrowUpDown, Pencil, Trash, FolderPlus, PackagePlus,
+  ImagePlus,
 } from "lucide-react";
 import {
-  products, ownerStore, resellerStores, formatRp, getStorePrice,
+  products as initialProducts, ownerStore, resellerStores, formatRp, getStorePrice,
   type Product,
 } from "@/data/store-data";
 
 type CartItem = { id: number; qty: number };
+
+type CategoryItem = {
+  id: string;
+  name: string;
+  icon: string;
+  channels: { webstore: boolean; reseller: boolean; pos: boolean };
+};
+
+const defaultCategories: CategoryItem[] = [
+  { id: "Tops", name: "Atasan", icon: "👕", channels: { webstore: true, reseller: true, pos: true } },
+  { id: "Bottoms", name: "Bawahan", icon: "👖", channels: { webstore: true, reseller: true, pos: true } },
+  { id: "Accessories", name: "Aksesoris", icon: "🎒", channels: { webstore: true, reseller: true, pos: true } },
+];
 type SortOption = "default" | "price_asc" | "price_desc" | "bestseller" | "rating";
 
 const sortLabels: Record<SortOption, string> = {
