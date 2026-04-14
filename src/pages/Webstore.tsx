@@ -5,20 +5,37 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Store, ShoppingCart, Package, RefreshCw, Search, Heart,
+  Store, ShoppingCart, Package, RefreshCw, Search,
   Star, Plus, Minus, Trash2, CreditCard, Banknote, QrCode,
   BarChart3, ArrowUpRight, Eye, ShoppingBag, Smartphone,
   Copy, Check, ExternalLink, Users, Percent, Link as LinkIcon,
   Settings, ArrowUpDown, Pencil, Trash, FolderPlus, PackagePlus,
 } from "lucide-react";
 import {
-  products, ownerStore, resellerStores, formatRp, getStorePrice,
+  products as initialProducts, ownerStore, resellerStores, formatRp,
   type Product,
 } from "@/data/store-data";
 
 type CartItem = { id: number; qty: number };
+
+type CategoryItem = {
+  id: string;
+  name: string;
+  icon: string;
+  channels: { webstore: boolean; reseller: boolean; pos: boolean };
+};
+
+const defaultCategories: CategoryItem[] = [
+  { id: "Tops", name: "Atasan", icon: "👕", channels: { webstore: true, reseller: true, pos: true } },
+  { id: "Bottoms", name: "Bawahan", icon: "👖", channels: { webstore: true, reseller: true, pos: true } },
+  { id: "Accessories", name: "Aksesoris", icon: "🎒", channels: { webstore: true, reseller: true, pos: true } },
+];
 type SortOption = "default" | "price_asc" | "price_desc" | "bestseller" | "rating";
 
 const sortLabels: Record<SortOption, string> = {
@@ -40,8 +57,10 @@ const sortProducts = (list: Product[], sort: SortOption): Product[] => {
   }
 };
 
-const categoryLabel = (cat: string) =>
-  cat === "Tops" ? "👕 Atasan" : cat === "Bottoms" ? "👖 Bawahan" : cat === "Accessories" ? "🎒 Aksesoris" : "📦 Semua";
+const categoryLabel = (cat: string) => {
+  const found = defaultCategories.find(c => c.id === cat);
+  return found ? `${found.icon} ${found.name}` : cat === "Semua" ? "📦 Semua" : cat;
+};
 
 export default function Webstore() {
   const [aiManager, setAiManager] = useState(true);
@@ -57,7 +76,80 @@ export default function Webstore() {
   const [storeSort, setStoreSort] = useState<SortOption>("default");
   const [posSort, setPosSort] = useState<SortOption>("default");
 
-  const categories = ["Semua", ...Array.from(new Set(products.map((p) => p.category)))];
+  // Data state
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [categoryList, setCategoryList] = useState<CategoryItem[]>(defaultCategories);
+
+  // Modal state
+  const [productModal, setProductModal] = useState<{ open: boolean; editing: Product | null }>({ open: false, editing: null });
+  const [categoryModal, setCategoryModal] = useState<{ open: boolean; editing: CategoryItem | null }>({ open: false, editing: null });
+
+  // Product form state
+  const [pForm, setPForm] = useState({ name: "", sku: "", price: "", stock: "", category: "", description: "" });
+  // Category form state
+  const [cForm, setCForm] = useState({ name: "", icon: "📦", webstore: true, reseller: true, pos: true });
+
+  const openProductModal = (p?: Product) => {
+    if (p) {
+      setPForm({ name: p.name, sku: p.sku, price: String(p.price), stock: String(p.stock), category: p.category, description: p.description });
+      setProductModal({ open: true, editing: p });
+    } else {
+      setPForm({ name: "", sku: "", price: "", stock: "", category: categoryList[0]?.id || "", description: "" });
+      setProductModal({ open: true, editing: null });
+    }
+  };
+
+  const saveProduct = () => {
+    if (!pForm.name || !pForm.sku || !pForm.price) return;
+    if (productModal.editing) {
+      setProducts(prev => prev.map(p => p.id === productModal.editing!.id ? {
+        ...p, name: pForm.name, sku: pForm.sku, price: Number(pForm.price), stock: Number(pForm.stock), category: pForm.category, description: pForm.description,
+        online: Number(pForm.stock), status: Number(pForm.stock) > 0 ? "synced" as const : "out" as const,
+      } : p));
+    } else {
+      const newP: Product = {
+        id: Math.max(...products.map(p => p.id), 0) + 1,
+        name: pForm.name, sku: pForm.sku, price: Number(pForm.price), stock: Number(pForm.stock),
+        online: Number(pForm.stock), status: Number(pForm.stock) > 0 ? "synced" : "out",
+        img: "", rating: 0, sold: 0, category: pForm.category, description: pForm.description,
+      };
+      setProducts(prev => [...prev, newP]);
+    }
+    setProductModal({ open: false, editing: null });
+  };
+
+  const deleteProduct = (id: number) => {
+    setProducts(prev => prev.filter(p => p.id !== id));
+  };
+
+  const openCategoryModal = (c?: CategoryItem) => {
+    if (c) {
+      setCForm({ name: c.name, icon: c.icon, webstore: c.channels.webstore, reseller: c.channels.reseller, pos: c.channels.pos });
+      setCategoryModal({ open: true, editing: c });
+    } else {
+      setCForm({ name: "", icon: "📦", webstore: true, reseller: true, pos: true });
+      setCategoryModal({ open: true, editing: null });
+    }
+  };
+
+  const saveCategory = () => {
+    if (!cForm.name) return;
+    if (categoryModal.editing) {
+      setCategoryList(prev => prev.map(c => c.id === categoryModal.editing!.id ? {
+        ...c, name: cForm.name, icon: cForm.icon, channels: { webstore: cForm.webstore, reseller: cForm.reseller, pos: cForm.pos },
+      } : c));
+    } else {
+      const newId = cForm.name.replace(/\s+/g, "_");
+      setCategoryList(prev => [...prev, { id: newId, name: cForm.name, icon: cForm.icon, channels: { webstore: cForm.webstore, reseller: cForm.reseller, pos: cForm.pos } }]);
+    }
+    setCategoryModal({ open: false, editing: null });
+  };
+
+  const deleteCategory = (id: string) => {
+    setCategoryList(prev => prev.filter(c => c.id !== id));
+  };
+
+  const categories = ["Semua", ...categoryList.map(c => c.id)];
 
   const addToCart = (id: number) => {
     setCart((c) => {
@@ -80,7 +172,7 @@ export default function Webstore() {
       (selectedCategory === "Semua" || p.category === selectedCategory)
     );
     return sortProducts(filtered, storeSort);
-  }, [search, selectedCategory, storeSort]);
+  }, [search, selectedCategory, storeSort, products]);
 
   const posFiltered = useMemo(() => {
     const filtered = products.filter(
@@ -91,7 +183,7 @@ export default function Webstore() {
         (posCategory === "Semua" || p.category === posCategory)
     );
     return sortProducts(filtered, posSort);
-  }, [posSearch, posCategory, posSort]);
+  }, [posSearch, posCategory, posSort, products]);
 
   const storeUrl = (slug: string) => `${window.location.origin}/store/${slug}`;
 
@@ -496,39 +588,39 @@ export default function Webstore() {
                 <h3 className="font-semibold flex items-center gap-2"><FolderPlus className="h-4 w-4 text-muted-foreground" /> Manajemen Kategori</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">Kelola kategori produk untuk webstore, reseller, dan POS.</p>
               </div>
-              <Button size="sm" className="gap-1.5">
+              <Button size="sm" className="gap-1.5" onClick={() => openCategoryModal()}>
                 <Plus className="h-3.5 w-3.5" /> Tambah Kategori
               </Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {["Tops", "Bottoms", "Accessories"].map((cat) => {
-                const count = products.filter(p => p.category === cat).length;
-                const activeCount = products.filter(p => p.category === cat && p.status !== "out").length;
+              {categoryList.map((cat) => {
+                const count = products.filter(p => p.category === cat.id).length;
+                const activeCount = products.filter(p => p.category === cat.id && p.status !== "out").length;
                 return (
-                  <Card key={cat} className="hover:shadow-md transition-shadow">
+                  <Card key={cat.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2.5">
-                          <span className="text-xl">{cat === "Tops" ? "👕" : cat === "Bottoms" ? "👖" : "🎒"}</span>
+                          <span className="text-xl">{cat.icon}</span>
                           <div>
-                            <h4 className="font-semibold text-sm">{cat === "Tops" ? "Atasan" : cat === "Bottoms" ? "Bawahan" : "Aksesoris"}</h4>
+                            <h4 className="font-semibold text-sm">{cat.name}</h4>
                             <p className="text-[10px] text-muted-foreground">{count} produk · {activeCount} aktif</p>
                           </div>
                         </div>
                         <Badge variant="default" className="text-[10px]">Aktif</Badge>
                       </div>
                       <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
-                        <span>📦 Stok: {products.filter(p => p.category === cat).reduce((s, p) => s + p.stock, 0)}</span>
-                        <span>🛒 Terjual: {products.filter(p => p.category === cat).reduce((s, p) => s + p.sold, 0)}</span>
+                        <span>📦 Stok: {products.filter(p => p.category === cat.id).reduce((s, p) => s + p.stock, 0)}</span>
+                        <span>🛒 Terjual: {products.filter(p => p.category === cat.id).reduce((s, p) => s + p.sold, 0)}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-[10px] gap-1"><Store className="h-2.5 w-2.5" /> Webstore</Badge>
-                        <Badge variant="outline" className="text-[10px] gap-1"><Users className="h-2.5 w-2.5" /> Reseller</Badge>
-                        <Badge variant="outline" className="text-[10px] gap-1"><ShoppingCart className="h-2.5 w-2.5" /> POS</Badge>
+                        {cat.channels.webstore && <Badge variant="outline" className="text-[10px] gap-1"><Store className="h-2.5 w-2.5" /> Webstore</Badge>}
+                        {cat.channels.reseller && <Badge variant="outline" className="text-[10px] gap-1"><Users className="h-2.5 w-2.5" /> Reseller</Badge>}
+                        {cat.channels.pos && <Badge variant="outline" className="text-[10px] gap-1"><ShoppingCart className="h-2.5 w-2.5" /> POS</Badge>}
                       </div>
                       <div className="flex items-center gap-1.5 mt-3 pt-3 border-t">
-                        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs flex-1"><Pencil className="h-3 w-3" /> Edit</Button>
-                        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-destructive hover:text-destructive"><Trash className="h-3 w-3" /> Hapus</Button>
+                        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs flex-1" onClick={() => openCategoryModal(cat)}><Pencil className="h-3 w-3" /> Edit</Button>
+                        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-destructive hover:text-destructive" onClick={() => deleteCategory(cat.id)}><Trash className="h-3 w-3" /> Hapus</Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -544,7 +636,7 @@ export default function Webstore() {
                 <h3 className="font-semibold flex items-center gap-2"><PackagePlus className="h-4 w-4 text-muted-foreground" /> Manajemen Produk</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">Tambah, edit, atau hapus produk yang ditampilkan di semua channel.</p>
               </div>
-              <Button size="sm" className="gap-1.5">
+              <Button size="sm" className="gap-1.5" onClick={() => openProductModal()}>
                 <Plus className="h-3.5 w-3.5" /> Tambah Produk
               </Button>
             </div>
@@ -596,8 +688,8 @@ export default function Webstore() {
                           </td>
                           <td className="py-3 px-4 text-center">
                             <div className="flex items-center justify-center gap-1">
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0"><Pencil className="h-3.5 w-3.5" /></Button>
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive"><Trash className="h-3.5 w-3.5" /></Button>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openProductModal(p)}><Pencil className="h-3.5 w-3.5" /></Button>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => deleteProduct(p.id)}><Trash className="h-3.5 w-3.5" /></Button>
                             </div>
                           </td>
                         </tr>
@@ -610,6 +702,108 @@ export default function Webstore() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* ─── PRODUCT MODAL ─────────────────── */}
+      <Dialog open={productModal.open} onOpenChange={(o) => !o && setProductModal({ open: false, editing: null })}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{productModal.editing ? "Edit Produk" : "Tambah Produk Baru"}</DialogTitle>
+            <DialogDescription>
+              {productModal.editing ? "Perbarui informasi produk." : "Isi detail produk untuk ditambahkan ke semua channel."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Nama Produk *</Label>
+                <Input placeholder="Kaos Polos Premium" value={pForm.name} onChange={(e) => setPForm(f => ({ ...f, name: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">SKU *</Label>
+                <Input placeholder="KPP-001" value={pForm.sku} onChange={(e) => setPForm(f => ({ ...f, sku: e.target.value }))} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Harga (Rp) *</Label>
+                <Input type="number" placeholder="89000" value={pForm.price} onChange={(e) => setPForm(f => ({ ...f, price: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Stok</Label>
+                <Input type="number" placeholder="100" value={pForm.stock} onChange={(e) => setPForm(f => ({ ...f, stock: e.target.value }))} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Kategori</Label>
+              <Select value={pForm.category} onValueChange={(v) => setPForm(f => ({ ...f, category: v }))}>
+                <SelectTrigger><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
+                <SelectContent>
+                  {categoryList.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.icon} {c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Deskripsi</Label>
+              <Textarea placeholder="Deskripsi singkat produk..." value={pForm.description} onChange={(e) => setPForm(f => ({ ...f, description: e.target.value }))} rows={3} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setProductModal({ open: false, editing: null })}>Batal</Button>
+            <Button onClick={saveProduct} disabled={!pForm.name || !pForm.sku || !pForm.price}>
+              {productModal.editing ? "Simpan Perubahan" : "Tambah Produk"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── CATEGORY MODAL ────────────────── */}
+      <Dialog open={categoryModal.open} onOpenChange={(o) => !o && setCategoryModal({ open: false, editing: null })}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{categoryModal.editing ? "Edit Kategori" : "Tambah Kategori Baru"}</DialogTitle>
+            <DialogDescription>
+              {categoryModal.editing ? "Perbarui informasi kategori." : "Buat kategori baru untuk mengelompokkan produk."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-2">
+            <div className="grid grid-cols-4 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Icon</Label>
+                <Input value={cForm.icon} onChange={(e) => setCForm(f => ({ ...f, icon: e.target.value }))} className="text-center text-lg" maxLength={2} />
+              </div>
+              <div className="col-span-3 space-y-1.5">
+                <Label className="text-xs font-medium">Nama Kategori *</Label>
+                <Input placeholder="Aksesoris" value={cForm.name} onChange={(e) => setCForm(f => ({ ...f, name: e.target.value }))} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-medium">Tampilkan di Channel</Label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Checkbox checked={cForm.webstore} onCheckedChange={(v) => setCForm(f => ({ ...f, webstore: !!v }))} />
+                  <Store className="h-3.5 w-3.5" /> Webstore
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Checkbox checked={cForm.reseller} onCheckedChange={(v) => setCForm(f => ({ ...f, reseller: !!v }))} />
+                  <Users className="h-3.5 w-3.5" /> Reseller
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Checkbox checked={cForm.pos} onCheckedChange={(v) => setCForm(f => ({ ...f, pos: !!v }))} />
+                  <ShoppingCart className="h-3.5 w-3.5" /> POS
+                </label>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCategoryModal({ open: false, editing: null })}>Batal</Button>
+            <Button onClick={saveCategory} disabled={!cForm.name}>
+              {categoryModal.editing ? "Simpan Perubahan" : "Tambah Kategori"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
