@@ -75,7 +75,84 @@ export default function Webstore() {
   const [storeSort, setStoreSort] = useState<SortOption>("default");
   const [posSort, setPosSort] = useState<SortOption>("default");
 
-  const categories = ["Semua", ...Array.from(new Set(products.map((p) => p.category)))];
+  // Data state
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [categoryList, setCategoryList] = useState<CategoryItem[]>(defaultCategories);
+
+  // Modal state
+  const [productModal, setProductModal] = useState<{ open: boolean; editing: Product | null }>({ open: false, editing: null });
+  const [categoryModal, setCategoryModal] = useState<{ open: boolean; editing: CategoryItem | null }>({ open: false, editing: null });
+
+  // Product form state
+  const [pForm, setPForm] = useState({ name: "", sku: "", price: "", stock: "", category: "", description: "" });
+  // Category form state
+  const [cForm, setCForm] = useState({ name: "", icon: "📦", webstore: true, reseller: true, pos: true });
+
+  const openProductModal = (p?: Product) => {
+    if (p) {
+      setPForm({ name: p.name, sku: p.sku, price: String(p.price), stock: String(p.stock), category: p.category, description: p.description });
+      setProductModal({ open: true, editing: p });
+    } else {
+      setPForm({ name: "", sku: "", price: "", stock: "", category: categoryList[0]?.id || "", description: "" });
+      setProductModal({ open: true, editing: null });
+    }
+  };
+
+  const saveProduct = () => {
+    if (!pForm.name || !pForm.sku || !pForm.price) return;
+    if (productModal.editing) {
+      setProducts(prev => prev.map(p => p.id === productModal.editing!.id ? {
+        ...p, name: pForm.name, sku: pForm.sku, price: Number(pForm.price), stock: Number(pForm.stock), category: pForm.category, description: pForm.description,
+        online: Number(pForm.stock), status: Number(pForm.stock) > 0 ? "synced" as const : "out" as const,
+      } : p));
+    } else {
+      const newP: Product = {
+        id: Math.max(...products.map(p => p.id), 0) + 1,
+        name: pForm.name, sku: pForm.sku, price: Number(pForm.price), stock: Number(pForm.stock),
+        online: Number(pForm.stock), status: Number(pForm.stock) > 0 ? "synced" : "out",
+        img: "", rating: 0, sold: 0, category: pForm.category, description: pForm.description,
+      };
+      setProducts(prev => [...prev, newP]);
+    }
+    setProductModal({ open: false, editing: null });
+  };
+
+  const deleteProduct = (id: number) => {
+    setProducts(prev => prev.filter(p => p.id !== id));
+  };
+
+  const openCategoryModal = (c?: CategoryItem) => {
+    if (c) {
+      setCForm({ name: c.name, icon: c.icon, webstore: c.channels.webstore, reseller: c.channels.reseller, pos: c.channels.pos });
+      setCategoryModal({ open: true, editing: c });
+    } else {
+      setCForm({ name: "", icon: "📦", webstore: true, reseller: true, pos: true });
+      setCategoryModal({ open: true, editing: null });
+    }
+  };
+
+  const saveCategory = () => {
+    if (!cForm.name) return;
+    if (categoryModal.editing) {
+      setCategoryList(prev => prev.map(c => c.id === categoryModal.editing!.id ? {
+        ...c, name: cForm.name, icon: cForm.icon, channels: { webstore: cForm.webstore, reseller: cForm.reseller, pos: cForm.pos },
+      } : c));
+    } else {
+      const newId = cForm.name.replace(/\s+/g, "_");
+      setCategoryList(prev => [...prev, { id: newId, name: cForm.name, icon: cForm.icon, channels: { webstore: cForm.webstore, reseller: cForm.reseller, pos: cForm.pos } }]);
+    }
+    setCategoryModal({ open: false, editing: null });
+  };
+
+  const deleteCategory = (id: string) => {
+    setCategoryList(prev => prev.filter(c => c.id !== id));
+  };
+
+  const categories = ["Semua", ...categoryList.map(c => c.id)];
+  const getCategoryLabel = (catId: string) => {
+    const found = categoryList.find(c => c.id === catId);
+    return found ? `${found.icon} ${found.name}` : catId === "Semua" ? "📦 Semua" : catId;
+  };
 
   const addToCart = (id: number) => {
     setCart((c) => {
