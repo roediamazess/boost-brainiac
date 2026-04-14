@@ -58,8 +58,10 @@ const sortProducts = (list: Product[], sort: SortOption): Product[] => {
   }
 };
 
-const categoryLabel = (cat: string) =>
-  cat === "Tops" ? "👕 Atasan" : cat === "Bottoms" ? "👖 Bawahan" : cat === "Accessories" ? "🎒 Aksesoris" : "📦 Semua";
+const categoryLabel = (cat: string) => {
+  const found = defaultCategories.find(c => c.id === cat);
+  return found ? `${found.icon} ${found.name}` : cat === "Semua" ? "📦 Semua" : cat;
+};
 
 export default function Webstore() {
   const [aiManager, setAiManager] = useState(true);
@@ -591,39 +593,39 @@ export default function Webstore() {
                 <h3 className="font-semibold flex items-center gap-2"><FolderPlus className="h-4 w-4 text-muted-foreground" /> Manajemen Kategori</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">Kelola kategori produk untuk webstore, reseller, dan POS.</p>
               </div>
-              <Button size="sm" className="gap-1.5">
+              <Button size="sm" className="gap-1.5" onClick={() => openCategoryModal()}>
                 <Plus className="h-3.5 w-3.5" /> Tambah Kategori
               </Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {["Tops", "Bottoms", "Accessories"].map((cat) => {
-                const count = products.filter(p => p.category === cat).length;
-                const activeCount = products.filter(p => p.category === cat && p.status !== "out").length;
+              {categoryList.map((cat) => {
+                const count = products.filter(p => p.category === cat.id).length;
+                const activeCount = products.filter(p => p.category === cat.id && p.status !== "out").length;
                 return (
-                  <Card key={cat} className="hover:shadow-md transition-shadow">
+                  <Card key={cat.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2.5">
-                          <span className="text-xl">{cat === "Tops" ? "👕" : cat === "Bottoms" ? "👖" : "🎒"}</span>
+                          <span className="text-xl">{cat.icon}</span>
                           <div>
-                            <h4 className="font-semibold text-sm">{cat === "Tops" ? "Atasan" : cat === "Bottoms" ? "Bawahan" : "Aksesoris"}</h4>
+                            <h4 className="font-semibold text-sm">{cat.name}</h4>
                             <p className="text-[10px] text-muted-foreground">{count} produk · {activeCount} aktif</p>
                           </div>
                         </div>
                         <Badge variant="default" className="text-[10px]">Aktif</Badge>
                       </div>
                       <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
-                        <span>📦 Stok: {products.filter(p => p.category === cat).reduce((s, p) => s + p.stock, 0)}</span>
-                        <span>🛒 Terjual: {products.filter(p => p.category === cat).reduce((s, p) => s + p.sold, 0)}</span>
+                        <span>📦 Stok: {products.filter(p => p.category === cat.id).reduce((s, p) => s + p.stock, 0)}</span>
+                        <span>🛒 Terjual: {products.filter(p => p.category === cat.id).reduce((s, p) => s + p.sold, 0)}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-[10px] gap-1"><Store className="h-2.5 w-2.5" /> Webstore</Badge>
-                        <Badge variant="outline" className="text-[10px] gap-1"><Users className="h-2.5 w-2.5" /> Reseller</Badge>
-                        <Badge variant="outline" className="text-[10px] gap-1"><ShoppingCart className="h-2.5 w-2.5" /> POS</Badge>
+                        {cat.channels.webstore && <Badge variant="outline" className="text-[10px] gap-1"><Store className="h-2.5 w-2.5" /> Webstore</Badge>}
+                        {cat.channels.reseller && <Badge variant="outline" className="text-[10px] gap-1"><Users className="h-2.5 w-2.5" /> Reseller</Badge>}
+                        {cat.channels.pos && <Badge variant="outline" className="text-[10px] gap-1"><ShoppingCart className="h-2.5 w-2.5" /> POS</Badge>}
                       </div>
                       <div className="flex items-center gap-1.5 mt-3 pt-3 border-t">
-                        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs flex-1"><Pencil className="h-3 w-3" /> Edit</Button>
-                        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-destructive hover:text-destructive"><Trash className="h-3 w-3" /> Hapus</Button>
+                        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs flex-1" onClick={() => openCategoryModal(cat)}><Pencil className="h-3 w-3" /> Edit</Button>
+                        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-destructive hover:text-destructive" onClick={() => deleteCategory(cat.id)}><Trash className="h-3 w-3" /> Hapus</Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -639,7 +641,7 @@ export default function Webstore() {
                 <h3 className="font-semibold flex items-center gap-2"><PackagePlus className="h-4 w-4 text-muted-foreground" /> Manajemen Produk</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">Tambah, edit, atau hapus produk yang ditampilkan di semua channel.</p>
               </div>
-              <Button size="sm" className="gap-1.5">
+              <Button size="sm" className="gap-1.5" onClick={() => openProductModal()}>
                 <Plus className="h-3.5 w-3.5" /> Tambah Produk
               </Button>
             </div>
@@ -691,8 +693,8 @@ export default function Webstore() {
                           </td>
                           <td className="py-3 px-4 text-center">
                             <div className="flex items-center justify-center gap-1">
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0"><Pencil className="h-3.5 w-3.5" /></Button>
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive"><Trash className="h-3.5 w-3.5" /></Button>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openProductModal(p)}><Pencil className="h-3.5 w-3.5" /></Button>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => deleteProduct(p.id)}><Trash className="h-3.5 w-3.5" /></Button>
                             </div>
                           </td>
                         </tr>
