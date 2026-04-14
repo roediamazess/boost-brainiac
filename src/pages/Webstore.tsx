@@ -707,6 +707,108 @@ export default function Webstore() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* ─── PRODUCT MODAL ─────────────────── */}
+      <Dialog open={productModal.open} onOpenChange={(o) => !o && setProductModal({ open: false, editing: null })}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{productModal.editing ? "Edit Produk" : "Tambah Produk Baru"}</DialogTitle>
+            <DialogDescription>
+              {productModal.editing ? "Perbarui informasi produk." : "Isi detail produk untuk ditambahkan ke semua channel."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Nama Produk *</Label>
+                <Input placeholder="Kaos Polos Premium" value={pForm.name} onChange={(e) => setPForm(f => ({ ...f, name: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">SKU *</Label>
+                <Input placeholder="KPP-001" value={pForm.sku} onChange={(e) => setPForm(f => ({ ...f, sku: e.target.value }))} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Harga (Rp) *</Label>
+                <Input type="number" placeholder="89000" value={pForm.price} onChange={(e) => setPForm(f => ({ ...f, price: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Stok</Label>
+                <Input type="number" placeholder="100" value={pForm.stock} onChange={(e) => setPForm(f => ({ ...f, stock: e.target.value }))} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Kategori</Label>
+              <Select value={pForm.category} onValueChange={(v) => setPForm(f => ({ ...f, category: v }))}>
+                <SelectTrigger><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
+                <SelectContent>
+                  {categoryList.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.icon} {c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Deskripsi</Label>
+              <Textarea placeholder="Deskripsi singkat produk..." value={pForm.description} onChange={(e) => setPForm(f => ({ ...f, description: e.target.value }))} rows={3} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setProductModal({ open: false, editing: null })}>Batal</Button>
+            <Button onClick={saveProduct} disabled={!pForm.name || !pForm.sku || !pForm.price}>
+              {productModal.editing ? "Simpan Perubahan" : "Tambah Produk"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── CATEGORY MODAL ────────────────── */}
+      <Dialog open={categoryModal.open} onOpenChange={(o) => !o && setCategoryModal({ open: false, editing: null })}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{categoryModal.editing ? "Edit Kategori" : "Tambah Kategori Baru"}</DialogTitle>
+            <DialogDescription>
+              {categoryModal.editing ? "Perbarui informasi kategori." : "Buat kategori baru untuk mengelompokkan produk."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-2">
+            <div className="grid grid-cols-4 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Icon</Label>
+                <Input value={cForm.icon} onChange={(e) => setCForm(f => ({ ...f, icon: e.target.value }))} className="text-center text-lg" maxLength={2} />
+              </div>
+              <div className="col-span-3 space-y-1.5">
+                <Label className="text-xs font-medium">Nama Kategori *</Label>
+                <Input placeholder="Aksesoris" value={cForm.name} onChange={(e) => setCForm(f => ({ ...f, name: e.target.value }))} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-medium">Tampilkan di Channel</Label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Checkbox checked={cForm.webstore} onCheckedChange={(v) => setCForm(f => ({ ...f, webstore: !!v }))} />
+                  <Store className="h-3.5 w-3.5" /> Webstore
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Checkbox checked={cForm.reseller} onCheckedChange={(v) => setCForm(f => ({ ...f, reseller: !!v }))} />
+                  <Users className="h-3.5 w-3.5" /> Reseller
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Checkbox checked={cForm.pos} onCheckedChange={(v) => setCForm(f => ({ ...f, pos: !!v }))} />
+                  <ShoppingCart className="h-3.5 w-3.5" /> POS
+                </label>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCategoryModal({ open: false, editing: null })}>Batal</Button>
+            <Button onClick={saveCategory} disabled={!cForm.name}>
+              {categoryModal.editing ? "Simpan Perubahan" : "Tambah Kategori"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
