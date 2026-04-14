@@ -11,15 +11,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Store, ShoppingCart, Package, RefreshCw, Search, Heart,
+  Store, ShoppingCart, Package, RefreshCw, Search,
   Star, Plus, Minus, Trash2, CreditCard, Banknote, QrCode,
   BarChart3, ArrowUpRight, Eye, ShoppingBag, Smartphone,
   Copy, Check, ExternalLink, Users, Percent, Link as LinkIcon,
   Settings, ArrowUpDown, Pencil, Trash, FolderPlus, PackagePlus,
-  ImagePlus,
 } from "lucide-react";
 import {
-  products as initialProducts, ownerStore, resellerStores, formatRp, getStorePrice,
+  products as initialProducts, ownerStore, resellerStores, formatRp,
   type Product,
 } from "@/data/store-data";
 
@@ -177,7 +176,7 @@ export default function Webstore() {
       (selectedCategory === "Semua" || p.category === selectedCategory)
     );
     return sortProducts(filtered, storeSort);
-  }, [search, selectedCategory, storeSort]);
+  }, [search, selectedCategory, storeSort, products]);
 
   const posFiltered = useMemo(() => {
     const filtered = products.filter(
@@ -188,7 +187,7 @@ export default function Webstore() {
         (posCategory === "Semua" || p.category === posCategory)
     );
     return sortProducts(filtered, posSort);
-  }, [posSearch, posCategory, posSort]);
+  }, [posSearch, posCategory, posSort, products]);
 
   const storeUrl = (slug: string) => `${window.location.origin}/store/${slug}`;
 
