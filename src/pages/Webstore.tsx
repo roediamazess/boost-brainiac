@@ -150,10 +150,6 @@ export default function Webstore() {
   };
 
   const categories = ["Semua", ...categoryList.map(c => c.id)];
-  const getCategoryLabel = (catId: string) => {
-    const found = categoryList.find(c => c.id === catId);
-    return found ? `${found.icon} ${found.name}` : catId === "Semua" ? "📦 Semua" : catId;
-  };
 
   const addToCart = (id: number) => {
     setCart((c) => {
