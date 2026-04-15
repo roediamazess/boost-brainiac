@@ -88,7 +88,7 @@ export default function Webstore() {
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; type: "product" | "category"; id: number | string; name: string }>({ open: false, type: "product", id: 0, name: "" });
 
   // Product form state
-  const [pForm, setPForm] = useState({ name: "", sku: "", price: "", stock: "", category: "", description: "", chWebstore: true, chReseller: true, chPos: true });
+  const [pForm, setPForm] = useState({ name: "", sku: "", price: "", stock: "", category: "", description: "", chWebstore: true, chReseller: true, chPos: true, imgPreview: "" });
   // Category form state
   const [cForm, setCForm] = useState({ name: "", icon: "📦", webstore: true, reseller: true, pos: true });
 
