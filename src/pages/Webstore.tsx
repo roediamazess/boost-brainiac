@@ -87,16 +87,16 @@ export default function Webstore() {
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; type: "product" | "category"; id: number | string; name: string }>({ open: false, type: "product", id: 0, name: "" });
 
   // Product form state
-  const [pForm, setPForm] = useState({ name: "", sku: "", price: "", stock: "", category: "", description: "" });
+  const [pForm, setPForm] = useState({ name: "", sku: "", price: "", stock: "", category: "", description: "", chWebstore: true, chReseller: true, chPos: true });
   // Category form state
   const [cForm, setCForm] = useState({ name: "", icon: "📦", webstore: true, reseller: true, pos: true });
 
   const openProductModal = (p?: Product) => {
     if (p) {
-      setPForm({ name: p.name, sku: p.sku, price: String(p.price), stock: String(p.stock), category: p.category, description: p.description });
+      setPForm({ name: p.name, sku: p.sku, price: String(p.price), stock: String(p.stock), category: p.category, description: p.description, chWebstore: p.channels.webstore, chReseller: p.channels.reseller, chPos: p.channels.pos });
       setProductModal({ open: true, editing: p });
     } else {
-      setPForm({ name: "", sku: "", price: "", stock: "", category: categoryList[0]?.id || "", description: "" });
+      setPForm({ name: "", sku: "", price: "", stock: "", category: categoryList[0]?.id || "", description: "", chWebstore: true, chReseller: true, chPos: true });
       setProductModal({ open: true, editing: null });
     }
   };
@@ -107,6 +107,7 @@ export default function Webstore() {
       setProducts(prev => prev.map(p => p.id === productModal.editing!.id ? {
         ...p, name: pForm.name, sku: pForm.sku, price: Number(pForm.price), stock: Number(pForm.stock), category: pForm.category, description: pForm.description,
         online: Number(pForm.stock), status: Number(pForm.stock) > 0 ? "synced" as const : "out" as const,
+        channels: { webstore: pForm.chWebstore, reseller: pForm.chReseller, pos: pForm.chPos },
       } : p));
     } else {
       const newP: Product = {
@@ -114,6 +115,7 @@ export default function Webstore() {
         name: pForm.name, sku: pForm.sku, price: Number(pForm.price), stock: Number(pForm.stock),
         online: Number(pForm.stock), status: Number(pForm.stock) > 0 ? "synced" : "out",
         img: "", rating: 0, sold: 0, category: pForm.category, description: pForm.description,
+        channels: { webstore: pForm.chWebstore, reseller: pForm.chReseller, pos: pForm.chPos },
       };
       setProducts(prev => [...prev, newP]);
     }
@@ -695,9 +697,10 @@ export default function Webstore() {
                           <td className="py-3 px-4 text-right">{p.stock}</td>
                           <td className="py-3 px-4">
                             <div className="flex items-center justify-center gap-1">
-                              <Badge variant="secondary" className="text-[9px] px-1.5">Web</Badge>
-                              <Badge variant="secondary" className="text-[9px] px-1.5">POS</Badge>
-                              <Badge variant="secondary" className="text-[9px] px-1.5">Reseller</Badge>
+                              {p.channels.webstore && <Badge variant="secondary" className="text-[9px] px-1.5">Web</Badge>}
+                              {p.channels.pos && <Badge variant="secondary" className="text-[9px] px-1.5">POS</Badge>}
+                              {p.channels.reseller && <Badge variant="secondary" className="text-[9px] px-1.5">Reseller</Badge>}
+                              {!p.channels.webstore && !p.channels.pos && !p.channels.reseller && <span className="text-[10px] text-muted-foreground">—</span>}
                             </div>
                           </td>
                           <td className="py-3 px-4 text-center">
@@ -766,6 +769,23 @@ export default function Webstore() {
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Deskripsi</Label>
               <Textarea placeholder="Deskripsi singkat produk..." value={pForm.description} onChange={(e) => setPForm(f => ({ ...f, description: e.target.value }))} rows={3} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-medium">Aktif di Channel</Label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Switch checked={pForm.chWebstore} onCheckedChange={(v) => setPForm(f => ({ ...f, chWebstore: v }))} />
+                  <Store className="h-3.5 w-3.5" /> Webstore
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Switch checked={pForm.chReseller} onCheckedChange={(v) => setPForm(f => ({ ...f, chReseller: v }))} />
+                  <Users className="h-3.5 w-3.5" /> Reseller
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Switch checked={pForm.chPos} onCheckedChange={(v) => setPForm(f => ({ ...f, chPos: v }))} />
+                  <ShoppingCart className="h-3.5 w-3.5" /> POS
+                </label>
+              </div>
             </div>
           </div>
           <DialogFooter>
