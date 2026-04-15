@@ -84,6 +84,7 @@ export default function Webstore() {
   // Modal state
   const [productModal, setProductModal] = useState<{ open: boolean; editing: Product | null }>({ open: false, editing: null });
   const [categoryModal, setCategoryModal] = useState<{ open: boolean; editing: CategoryItem | null }>({ open: false, editing: null });
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; type: "product" | "category"; id: number | string; name: string }>({ open: false, type: "product", id: 0, name: "" });
 
   // Product form state
   const [pForm, setPForm] = useState({ name: "", sku: "", price: "", stock: "", category: "", description: "" });
