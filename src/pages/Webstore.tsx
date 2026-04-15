@@ -17,6 +17,7 @@ import {
   BarChart3, ArrowUpRight, Eye, ShoppingBag, Smartphone,
   Copy, Check, ExternalLink, Users, Percent, Link as LinkIcon,
   Settings, ArrowUpDown, Pencil, Trash, FolderPlus, PackagePlus,
+  ImagePlus,
 } from "lucide-react";
 import {
   products as initialProducts, ownerStore, resellerStores, formatRp,
