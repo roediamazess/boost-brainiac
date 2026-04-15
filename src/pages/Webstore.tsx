@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Store, ShoppingCart, Package, RefreshCw, Search,
@@ -83,6 +84,7 @@ export default function Webstore() {
   // Modal state
   const [productModal, setProductModal] = useState<{ open: boolean; editing: Product | null }>({ open: false, editing: null });
   const [categoryModal, setCategoryModal] = useState<{ open: boolean; editing: CategoryItem | null }>({ open: false, editing: null });
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; type: "product" | "category"; id: number | string; name: string }>({ open: false, type: "product", id: 0, name: "" });
 
   // Product form state
   const [pForm, setPForm] = useState({ name: "", sku: "", price: "", stock: "", category: "", description: "" });
@@ -118,6 +120,10 @@ export default function Webstore() {
     setProductModal({ open: false, editing: null });
   };
 
+  const confirmDeleteProduct = (p: Product) => {
+    setDeleteConfirm({ open: true, type: "product", id: p.id, name: p.name });
+  };
+
   const deleteProduct = (id: number) => {
     setProducts(prev => prev.filter(p => p.id !== id));
   };
@@ -145,8 +151,21 @@ export default function Webstore() {
     setCategoryModal({ open: false, editing: null });
   };
 
+  const confirmDeleteCategory = (c: CategoryItem) => {
+    setDeleteConfirm({ open: true, type: "category", id: c.id, name: c.name });
+  };
+
   const deleteCategory = (id: string) => {
     setCategoryList(prev => prev.filter(c => c.id !== id));
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deleteConfirm.type === "product") {
+      deleteProduct(deleteConfirm.id as number);
+    } else {
+      deleteCategory(deleteConfirm.id as string);
+    }
+    setDeleteConfirm(prev => ({ ...prev, open: false }));
   };
 
   const categories = ["Semua", ...categoryList.map(c => c.id)];
@@ -620,7 +639,7 @@ export default function Webstore() {
                       </div>
                       <div className="flex items-center gap-1.5 mt-3 pt-3 border-t">
                         <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs flex-1" onClick={() => openCategoryModal(cat)}><Pencil className="h-3 w-3" /> Edit</Button>
-                        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-destructive hover:text-destructive" onClick={() => deleteCategory(cat.id)}><Trash className="h-3 w-3" /> Hapus</Button>
+                        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-destructive hover:text-destructive" onClick={() => confirmDeleteCategory(cat)}><Trash className="h-3 w-3" /> Hapus</Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -689,7 +708,7 @@ export default function Webstore() {
                           <td className="py-3 px-4 text-center">
                             <div className="flex items-center justify-center gap-1">
                               <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openProductModal(p)}><Pencil className="h-3.5 w-3.5" /></Button>
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => deleteProduct(p.id)}><Trash className="h-3.5 w-3.5" /></Button>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => confirmDeleteProduct(p)}><Trash className="h-3.5 w-3.5" /></Button>
                             </div>
                           </td>
                         </tr>
@@ -804,6 +823,24 @@ export default function Webstore() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirm.open} onOpenChange={(open) => setDeleteConfirm(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus {deleteConfirm.type === "product" ? "Produk" : "Kategori"}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin menghapus <strong>{deleteConfirm.name}</strong>? Tindakan ini tidak dapat dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Ya, Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
