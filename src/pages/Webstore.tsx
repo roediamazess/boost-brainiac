@@ -697,9 +697,10 @@ export default function Webstore() {
                           <td className="py-3 px-4 text-right">{p.stock}</td>
                           <td className="py-3 px-4">
                             <div className="flex items-center justify-center gap-1">
-                              <Badge variant="secondary" className="text-[9px] px-1.5">Web</Badge>
-                              <Badge variant="secondary" className="text-[9px] px-1.5">POS</Badge>
-                              <Badge variant="secondary" className="text-[9px] px-1.5">Reseller</Badge>
+                              {p.channels.webstore && <Badge variant="secondary" className="text-[9px] px-1.5">Web</Badge>}
+                              {p.channels.pos && <Badge variant="secondary" className="text-[9px] px-1.5">POS</Badge>}
+                              {p.channels.reseller && <Badge variant="secondary" className="text-[9px] px-1.5">Reseller</Badge>}
+                              {!p.channels.webstore && !p.channels.pos && !p.channels.reseller && <span className="text-[10px] text-muted-foreground">—</span>}
                             </div>
                           </td>
                           <td className="py-3 px-4 text-center">
