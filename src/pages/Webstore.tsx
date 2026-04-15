@@ -17,6 +17,7 @@ import {
   BarChart3, ArrowUpRight, Eye, ShoppingBag, Smartphone,
   Copy, Check, ExternalLink, Users, Percent, Link as LinkIcon,
   Settings, ArrowUpDown, Pencil, Trash, FolderPlus, PackagePlus,
+  ImagePlus,
 } from "lucide-react";
 import {
   products as initialProducts, ownerStore, resellerStores, formatRp,
@@ -87,16 +88,16 @@ export default function Webstore() {
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; type: "product" | "category"; id: number | string; name: string }>({ open: false, type: "product", id: 0, name: "" });
 
   // Product form state
-  const [pForm, setPForm] = useState({ name: "", sku: "", price: "", stock: "", category: "", description: "", chWebstore: true, chReseller: true, chPos: true });
+  const [pForm, setPForm] = useState({ name: "", sku: "", price: "", stock: "", category: "", description: "", chWebstore: true, chReseller: true, chPos: true, imgPreview: "" });
   // Category form state
   const [cForm, setCForm] = useState({ name: "", icon: "📦", webstore: true, reseller: true, pos: true });
 
   const openProductModal = (p?: Product) => {
     if (p) {
-      setPForm({ name: p.name, sku: p.sku, price: String(p.price), stock: String(p.stock), category: p.category, description: p.description, chWebstore: p.channels.webstore, chReseller: p.channels.reseller, chPos: p.channels.pos });
+      setPForm({ name: p.name, sku: p.sku, price: String(p.price), stock: String(p.stock), category: p.category, description: p.description, chWebstore: p.channels.webstore, chReseller: p.channels.reseller, chPos: p.channels.pos, imgPreview: p.img });
       setProductModal({ open: true, editing: p });
     } else {
-      setPForm({ name: "", sku: "", price: "", stock: "", category: categoryList[0]?.id || "", description: "", chWebstore: true, chReseller: true, chPos: true });
+      setPForm({ name: "", sku: "", price: "", stock: "", category: categoryList[0]?.id || "", description: "", chWebstore: true, chReseller: true, chPos: true, imgPreview: "" });
       setProductModal({ open: true, editing: null });
     }
   };
@@ -107,6 +108,7 @@ export default function Webstore() {
       setProducts(prev => prev.map(p => p.id === productModal.editing!.id ? {
         ...p, name: pForm.name, sku: pForm.sku, price: Number(pForm.price), stock: Number(pForm.stock), category: pForm.category, description: pForm.description,
         online: Number(pForm.stock), status: Number(pForm.stock) > 0 ? "synced" as const : "out" as const,
+        img: pForm.imgPreview || p.img,
         channels: { webstore: pForm.chWebstore, reseller: pForm.chReseller, pos: pForm.chPos },
       } : p));
     } else {
@@ -114,7 +116,7 @@ export default function Webstore() {
         id: Math.max(...products.map(p => p.id), 0) + 1,
         name: pForm.name, sku: pForm.sku, price: Number(pForm.price), stock: Number(pForm.stock),
         online: Number(pForm.stock), status: Number(pForm.stock) > 0 ? "synced" : "out",
-        img: "", rating: 0, sold: 0, category: pForm.category, description: pForm.description,
+        img: pForm.imgPreview, rating: 0, sold: 0, category: pForm.category, description: pForm.description,
         channels: { webstore: pForm.chWebstore, reseller: pForm.chReseller, pos: pForm.chPos },
       };
       setProducts(prev => [...prev, newP]);
@@ -769,6 +771,41 @@ export default function Webstore() {
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Deskripsi</Label>
               <Textarea placeholder="Deskripsi singkat produk..." value={pForm.description} onChange={(e) => setPForm(f => ({ ...f, description: e.target.value }))} rows={3} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Gambar Produk</Label>
+              <div className="flex items-center gap-4">
+                {pForm.imgPreview ? (
+                  <div className="relative w-20 h-20 rounded-lg border border-border overflow-hidden bg-muted">
+                    <img src={pForm.imgPreview} alt="Preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setPForm(f => ({ ...f, imgPreview: "" }))}
+                      className="absolute top-0.5 right-0.5 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs hover:opacity-80"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center w-20 h-20 rounded-lg border-2 border-dashed border-muted-foreground/30 cursor-pointer hover:border-primary/50 hover:bg-accent/50 transition-colors">
+                    <ImagePlus className="h-6 w-6 text-muted-foreground" />
+                    <span className="text-[10px] text-muted-foreground mt-1">Upload</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const url = URL.createObjectURL(file);
+                          setPForm(f => ({ ...f, imgPreview: url }));
+                        }
+                      }}
+                    />
+                  </label>
+                )}
+                <p className="text-xs text-muted-foreground">Format: JPG, PNG, WebP. Maks 2MB.</p>
+              </div>
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-medium">Aktif di Channel</Label>
