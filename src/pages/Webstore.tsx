@@ -108,6 +108,7 @@ export default function Webstore() {
       setProducts(prev => prev.map(p => p.id === productModal.editing!.id ? {
         ...p, name: pForm.name, sku: pForm.sku, price: Number(pForm.price), stock: Number(pForm.stock), category: pForm.category, description: pForm.description,
         online: Number(pForm.stock), status: Number(pForm.stock) > 0 ? "synced" as const : "out" as const,
+        img: pForm.imgPreview || p.img,
         channels: { webstore: pForm.chWebstore, reseller: pForm.chReseller, pos: pForm.chPos },
       } : p));
     } else {
