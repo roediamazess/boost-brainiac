@@ -94,10 +94,10 @@ export default function Webstore() {
 
   const openProductModal = (p?: Product) => {
     if (p) {
-      setPForm({ name: p.name, sku: p.sku, price: String(p.price), stock: String(p.stock), category: p.category, description: p.description, chWebstore: p.channels.webstore, chReseller: p.channels.reseller, chPos: p.channels.pos });
+      setPForm({ name: p.name, sku: p.sku, price: String(p.price), stock: String(p.stock), category: p.category, description: p.description, chWebstore: p.channels.webstore, chReseller: p.channels.reseller, chPos: p.channels.pos, imgPreview: p.img });
       setProductModal({ open: true, editing: p });
     } else {
-      setPForm({ name: "", sku: "", price: "", stock: "", category: categoryList[0]?.id || "", description: "", chWebstore: true, chReseller: true, chPos: true });
+      setPForm({ name: "", sku: "", price: "", stock: "", category: categoryList[0]?.id || "", description: "", chWebstore: true, chReseller: true, chPos: true, imgPreview: "" });
       setProductModal({ open: true, editing: null });
     }
   };
