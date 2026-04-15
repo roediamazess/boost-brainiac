@@ -639,7 +639,7 @@ export default function Webstore() {
                       </div>
                       <div className="flex items-center gap-1.5 mt-3 pt-3 border-t">
                         <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs flex-1" onClick={() => openCategoryModal(cat)}><Pencil className="h-3 w-3" /> Edit</Button>
-                        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-destructive hover:text-destructive" onClick={() => deleteCategory(cat.id)}><Trash className="h-3 w-3" /> Hapus</Button>
+                        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-destructive hover:text-destructive" onClick={() => confirmDeleteCategory(cat)}><Trash className="h-3 w-3" /> Hapus</Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -708,7 +708,7 @@ export default function Webstore() {
                           <td className="py-3 px-4 text-center">
                             <div className="flex items-center justify-center gap-1">
                               <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openProductModal(p)}><Pencil className="h-3.5 w-3.5" /></Button>
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => deleteProduct(p.id)}><Trash className="h-3.5 w-3.5" /></Button>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => confirmDeleteProduct(p)}><Trash className="h-3.5 w-3.5" /></Button>
                             </div>
                           </td>
                         </tr>
