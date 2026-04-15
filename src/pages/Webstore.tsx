@@ -151,8 +151,21 @@ export default function Webstore() {
     setCategoryModal({ open: false, editing: null });
   };
 
+  const confirmDeleteCategory = (c: CategoryItem) => {
+    setDeleteConfirm({ open: true, type: "category", id: c.id, name: c.name });
+  };
+
   const deleteCategory = (id: string) => {
     setCategoryList(prev => prev.filter(c => c.id !== id));
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deleteConfirm.type === "product") {
+      deleteProduct(deleteConfirm.id as number);
+    } else {
+      deleteCategory(deleteConfirm.id as string);
+    }
+    setDeleteConfirm(prev => ({ ...prev, open: false }));
   };
 
   const categories = ["Semua", ...categoryList.map(c => c.id)];
