@@ -115,7 +115,7 @@ export default function Webstore() {
         id: Math.max(...products.map(p => p.id), 0) + 1,
         name: pForm.name, sku: pForm.sku, price: Number(pForm.price), stock: Number(pForm.stock),
         online: Number(pForm.stock), status: Number(pForm.stock) > 0 ? "synced" : "out",
-        img: "", rating: 0, sold: 0, category: pForm.category, description: pForm.description,
+        img: pForm.imgPreview, rating: 0, sold: 0, category: pForm.category, description: pForm.description,
         channels: { webstore: pForm.chWebstore, reseller: pForm.chReseller, pos: pForm.chPos },
       };
       setProducts(prev => [...prev, newP]);
