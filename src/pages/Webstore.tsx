@@ -772,6 +772,41 @@ export default function Webstore() {
               <Label className="text-xs font-medium">Deskripsi</Label>
               <Textarea placeholder="Deskripsi singkat produk..." value={pForm.description} onChange={(e) => setPForm(f => ({ ...f, description: e.target.value }))} rows={3} />
             </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Gambar Produk</Label>
+              <div className="flex items-center gap-4">
+                {pForm.imgPreview ? (
+                  <div className="relative w-20 h-20 rounded-lg border border-border overflow-hidden bg-muted">
+                    <img src={pForm.imgPreview} alt="Preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setPForm(f => ({ ...f, imgPreview: "" }))}
+                      className="absolute top-0.5 right-0.5 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs hover:opacity-80"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center w-20 h-20 rounded-lg border-2 border-dashed border-muted-foreground/30 cursor-pointer hover:border-primary/50 hover:bg-accent/50 transition-colors">
+                    <ImagePlus className="h-6 w-6 text-muted-foreground" />
+                    <span className="text-[10px] text-muted-foreground mt-1">Upload</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const url = URL.createObjectURL(file);
+                          setPForm(f => ({ ...f, imgPreview: url }));
+                        }
+                      }}
+                    />
+                  </label>
+                )}
+                <p className="text-xs text-muted-foreground">Format: JPG, PNG, WebP. Maks 2MB.</p>
+              </div>
+            </div>
             <div className="space-y-2">
               <Label className="text-xs font-medium">Aktif di Channel</Label>
               <div className="flex items-center gap-4">
