@@ -120,6 +120,10 @@ export default function Webstore() {
     setProductModal({ open: false, editing: null });
   };
 
+  const confirmDeleteProduct = (p: Product) => {
+    setDeleteConfirm({ open: true, type: "product", id: p.id, name: p.name });
+  };
+
   const deleteProduct = (id: number) => {
     setProducts(prev => prev.filter(p => p.id !== id));
   };
