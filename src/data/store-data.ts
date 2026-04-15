@@ -18,15 +18,16 @@ export type Product = {
   sold: number;
   category: string;
   description: string;
+  channels: { webstore: boolean; reseller: boolean; pos: boolean };
 };
 
 export const products: Product[] = [
-  { id: 1, name: "Kaos Polos Premium", sku: "KPP-001", price: 89000, stock: 142, online: 138, status: "synced", img: imgKaos, rating: 4.8, sold: 1240, category: "Tops", description: "Kaos polos berbahan cotton combed 30s, nyaman dan adem dipakai sehari-hari." },
-  { id: 2, name: "Tote Bag Canvas", sku: "TBC-045", price: 65000, stock: 87, online: 87, status: "synced", img: imgTotebag, rating: 4.6, sold: 890, category: "Accessories", description: "Tote bag kanvas tebal dengan tali kulit sintetis, cocok untuk daily use." },
-  { id: 3, name: "Hoodie Oversize", sku: "HOS-012", price: 185000, stock: 34, online: 31, status: "syncing", img: imgHoodie, rating: 4.9, sold: 2100, category: "Tops", description: "Hoodie oversize bahan fleece premium, hangat dan stylish." },
-  { id: 4, name: "Celana Jogger", sku: "CJG-099", price: 125000, stock: 56, online: 56, status: "synced", img: imgJogger, rating: 4.5, sold: 760, category: "Bottoms", description: "Celana jogger bahan baby terry, elastis dan nyaman untuk aktivitas." },
-  { id: 5, name: "Snapback Cap", sku: "SBC-023", price: 45000, stock: 210, online: 208, status: "synced", img: imgCap, rating: 4.3, sold: 1580, category: "Accessories", description: "Topi snapback bahan premium dengan gesper logam adjustable." },
-  { id: 6, name: "Kemeja Flanel", sku: "KFL-077", price: 149000, stock: 0, online: 0, status: "out", img: imgFlannel, rating: 4.7, sold: 430, category: "Tops", description: "Kemeja flanel kotak-kotak bahan katun tebal, cocok untuk outdoor." },
+  { id: 1, name: "Kaos Polos Premium", sku: "KPP-001", price: 89000, stock: 142, online: 138, status: "synced", img: imgKaos, rating: 4.8, sold: 1240, category: "Tops", description: "Kaos polos berbahan cotton combed 30s, nyaman dan adem dipakai sehari-hari.", channels: { webstore: true, reseller: true, pos: true } },
+  { id: 2, name: "Tote Bag Canvas", sku: "TBC-045", price: 65000, stock: 87, online: 87, status: "synced", img: imgTotebag, rating: 4.6, sold: 890, category: "Accessories", description: "Tote bag kanvas tebal dengan tali kulit sintetis, cocok untuk daily use.", channels: { webstore: true, reseller: true, pos: true } },
+  { id: 3, name: "Hoodie Oversize", sku: "HOS-012", price: 185000, stock: 34, online: 31, status: "syncing", img: imgHoodie, rating: 4.9, sold: 2100, category: "Tops", description: "Hoodie oversize bahan fleece premium, hangat dan stylish.", channels: { webstore: true, reseller: true, pos: true } },
+  { id: 4, name: "Celana Jogger", sku: "CJG-099", price: 125000, stock: 56, online: 56, status: "synced", img: imgJogger, rating: 4.5, sold: 760, category: "Bottoms", description: "Celana jogger bahan baby terry, elastis dan nyaman untuk aktivitas.", channels: { webstore: true, reseller: true, pos: true } },
+  { id: 5, name: "Snapback Cap", sku: "SBC-023", price: 45000, stock: 210, online: 208, status: "synced", img: imgCap, rating: 4.3, sold: 1580, category: "Accessories", description: "Topi snapback bahan premium dengan gesper logam adjustable.", channels: { webstore: true, reseller: true, pos: true } },
+  { id: 6, name: "Kemeja Flanel", sku: "KFL-077", price: 149000, stock: 0, online: 0, status: "out", img: imgFlannel, rating: 4.7, sold: 430, category: "Tops", description: "Kemeja flanel kotak-kotak bahan katun tebal, cocok untuk outdoor.", channels: { webstore: true, reseller: true, pos: true } },
 ];
 
 export type StoreInfo = {
