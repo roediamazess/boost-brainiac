@@ -1,4 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -15,7 +18,7 @@ import {
   Store, ShoppingCart, Package, RefreshCw, Search,
   Star, Plus, Minus, Trash2, CreditCard, Banknote, QrCode,
   BarChart3, ArrowUpRight, Eye, ShoppingBag, Smartphone,
-  Copy, Check, ExternalLink, Users, Percent, Link as LinkIcon,
+  Copy, Check, ExternalLink, Users, Percent, Link as LinkIcon, GripVertical,
   Settings, ArrowUpDown, Pencil, Trash, FolderPlus, PackagePlus,
   ImagePlus,
 } from "lucide-react";
@@ -64,6 +67,54 @@ const categoryLabel = (cat: string) => {
   return found ? `${found.icon} ${found.name}` : cat === "Semua" ? "📦 Semua" : cat;
 };
 
+function SortableProductRow({ p, categoryLabel, openProductModal, confirmDeleteProduct }: {
+  p: Product; categoryLabel: (cat: string) => string; openProductModal: (p: Product) => void; confirmDeleteProduct: (p: Product) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+  return (
+    <tr ref={setNodeRef} style={style} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
+      <td className="py-3 px-2 w-8">
+        <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 text-muted-foreground hover:text-foreground">
+          <GripVertical className="h-4 w-4" />
+        </button>
+      </td>
+      <td className="py-3 px-4">
+        <div className="flex items-center gap-3">
+          <img src={p.img} alt={p.name} className="h-9 w-9 rounded-lg object-cover" />
+          <div>
+            <span className="font-medium text-sm">{p.name}</span>
+            <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{p.description}</p>
+          </div>
+        </div>
+      </td>
+      <td className="py-3 px-4 text-muted-foreground font-mono text-xs">{p.sku}</td>
+      <td className="py-3 px-4"><Badge variant="outline" className="text-[10px]">{categoryLabel(p.category)}</Badge></td>
+      <td className="py-3 px-4 text-right font-medium">{formatRp(p.price)}</td>
+      <td className="py-3 px-4 text-right">{p.stock}</td>
+      <td className="py-3 px-4">
+        <div className="flex items-center justify-center gap-1">
+          {p.channels.webstore && <Badge variant="secondary" className="text-[9px] px-1.5">Web</Badge>}
+          {p.channels.pos && <Badge variant="secondary" className="text-[9px] px-1.5">POS</Badge>}
+          {p.channels.reseller && <Badge variant="secondary" className="text-[9px] px-1.5">Reseller</Badge>}
+          {!p.channels.webstore && !p.channels.pos && !p.channels.reseller && <span className="text-[10px] text-muted-foreground">—</span>}
+        </div>
+      </td>
+      <td className="py-3 px-4 text-center">
+        <Badge variant={p.status === "synced" ? "default" : p.status === "syncing" ? "secondary" : "destructive"} className="text-[10px]">
+          {p.status === "synced" ? "✓ Aktif" : p.status === "syncing" ? "⟳ Sync" : "✕ Habis"}
+        </Badge>
+      </td>
+      <td className="py-3 px-4 text-center">
+        <div className="flex items-center justify-center gap-1">
+          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openProductModal(p)}><Pencil className="h-3.5 w-3.5" /></Button>
+          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => confirmDeleteProduct(p)}><Trash className="h-3.5 w-3.5" /></Button>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 export default function Webstore() {
   const [aiManager, setAiManager] = useState(true);
   const [search, setSearch] = useState("");
@@ -91,6 +142,22 @@ export default function Webstore() {
   const [pForm, setPForm] = useState({ name: "", sku: "", price: "", stock: "", category: "", description: "", chWebstore: true, chReseller: true, chPos: true, imgPreview: "" });
   // Category form state
   const [cForm, setCForm] = useState({ name: "", icon: "📦", webstore: true, reseller: true, pos: true });
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setProducts(prev => {
+        const oldIndex = prev.findIndex(p => p.id === active.id);
+        const newIndex = prev.findIndex(p => p.id === over.id);
+        return arrayMove(prev, oldIndex, newIndex);
+      });
+    }
+  }, []);
 
   const openProductModal = (p?: Product) => {
     if (p) {
@@ -666,60 +733,30 @@ export default function Webstore() {
             <Card>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b bg-muted/30 text-xs text-muted-foreground">
-                        <th className="text-left py-3 px-4 font-medium">Produk</th>
-                        <th className="text-left py-3 px-4 font-medium">SKU</th>
-                        <th className="text-left py-3 px-4 font-medium">Kategori</th>
-                        <th className="text-right py-3 px-4 font-medium">Harga</th>
-                        <th className="text-right py-3 px-4 font-medium">Stok</th>
-                        <th className="text-center py-3 px-4 font-medium">Channel</th>
-                        <th className="text-center py-3 px-4 font-medium">Status</th>
-                        <th className="text-center py-3 px-4 font-medium">Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {products.map((p) => (
-                        <tr key={p.sku} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-3">
-                              <img src={p.img} alt={p.name} className="h-9 w-9 rounded-lg object-cover" />
-                              <div>
-                                <span className="font-medium text-sm">{p.name}</span>
-                                <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{p.description}</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 text-muted-foreground font-mono text-xs">{p.sku}</td>
-                          <td className="py-3 px-4">
-                            <Badge variant="outline" className="text-[10px]">{categoryLabel(p.category)}</Badge>
-                          </td>
-                          <td className="py-3 px-4 text-right font-medium">{formatRp(p.price)}</td>
-                          <td className="py-3 px-4 text-right">{p.stock}</td>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center justify-center gap-1">
-                              {p.channels.webstore && <Badge variant="secondary" className="text-[9px] px-1.5">Web</Badge>}
-                              {p.channels.pos && <Badge variant="secondary" className="text-[9px] px-1.5">POS</Badge>}
-                              {p.channels.reseller && <Badge variant="secondary" className="text-[9px] px-1.5">Reseller</Badge>}
-                              {!p.channels.webstore && !p.channels.pos && !p.channels.reseller && <span className="text-[10px] text-muted-foreground">—</span>}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <Badge variant={p.status === "synced" ? "default" : p.status === "syncing" ? "secondary" : "destructive"} className="text-[10px]">
-                              {p.status === "synced" ? "✓ Aktif" : p.status === "syncing" ? "⟳ Sync" : "✕ Habis"}
-                            </Badge>
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <div className="flex items-center justify-center gap-1">
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openProductModal(p)}><Pencil className="h-3.5 w-3.5" /></Button>
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => confirmDeleteProduct(p)}><Trash className="h-3.5 w-3.5" /></Button>
-                            </div>
-                          </td>
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b bg-muted/30 text-xs text-muted-foreground">
+                          <th className="w-8 py-3 px-2"></th>
+                          <th className="text-left py-3 px-4 font-medium">Produk</th>
+                          <th className="text-left py-3 px-4 font-medium">SKU</th>
+                          <th className="text-left py-3 px-4 font-medium">Kategori</th>
+                          <th className="text-right py-3 px-4 font-medium">Harga</th>
+                          <th className="text-right py-3 px-4 font-medium">Stok</th>
+                          <th className="text-center py-3 px-4 font-medium">Channel</th>
+                          <th className="text-center py-3 px-4 font-medium">Status</th>
+                          <th className="text-center py-3 px-4 font-medium">Aksi</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <SortableContext items={products.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                        <tbody>
+                          {products.map((p) => (
+                            <SortableProductRow key={p.id} p={p} categoryLabel={categoryLabel} openProductModal={openProductModal} confirmDeleteProduct={confirmDeleteProduct} />
+                          ))}
+                        </tbody>
+                      </SortableContext>
+                    </table>
+                  </DndContext>
                 </div>
               </CardContent>
             </Card>
