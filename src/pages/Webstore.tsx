@@ -67,6 +67,54 @@ const categoryLabel = (cat: string) => {
   return found ? `${found.icon} ${found.name}` : cat === "Semua" ? "📦 Semua" : cat;
 };
 
+function SortableProductRow({ p, categoryLabel, openProductModal, confirmDeleteProduct }: {
+  p: Product; categoryLabel: (cat: string) => string; openProductModal: (p: Product) => void; confirmDeleteProduct: (p: Product) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+  return (
+    <tr ref={setNodeRef} style={style} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
+      <td className="py-3 px-2 w-8">
+        <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 text-muted-foreground hover:text-foreground">
+          <GripVertical className="h-4 w-4" />
+        </button>
+      </td>
+      <td className="py-3 px-4">
+        <div className="flex items-center gap-3">
+          <img src={p.img} alt={p.name} className="h-9 w-9 rounded-lg object-cover" />
+          <div>
+            <span className="font-medium text-sm">{p.name}</span>
+            <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{p.description}</p>
+          </div>
+        </div>
+      </td>
+      <td className="py-3 px-4 text-muted-foreground font-mono text-xs">{p.sku}</td>
+      <td className="py-3 px-4"><Badge variant="outline" className="text-[10px]">{categoryLabel(p.category)}</Badge></td>
+      <td className="py-3 px-4 text-right font-medium">{formatRp(p.price)}</td>
+      <td className="py-3 px-4 text-right">{p.stock}</td>
+      <td className="py-3 px-4">
+        <div className="flex items-center justify-center gap-1">
+          {p.channels.webstore && <Badge variant="secondary" className="text-[9px] px-1.5">Web</Badge>}
+          {p.channels.pos && <Badge variant="secondary" className="text-[9px] px-1.5">POS</Badge>}
+          {p.channels.reseller && <Badge variant="secondary" className="text-[9px] px-1.5">Reseller</Badge>}
+          {!p.channels.webstore && !p.channels.pos && !p.channels.reseller && <span className="text-[10px] text-muted-foreground">—</span>}
+        </div>
+      </td>
+      <td className="py-3 px-4 text-center">
+        <Badge variant={p.status === "synced" ? "default" : p.status === "syncing" ? "secondary" : "destructive"} className="text-[10px]">
+          {p.status === "synced" ? "✓ Aktif" : p.status === "syncing" ? "⟳ Sync" : "✕ Habis"}
+        </Badge>
+      </td>
+      <td className="py-3 px-4 text-center">
+        <div className="flex items-center justify-center gap-1">
+          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openProductModal(p)}><Pencil className="h-3.5 w-3.5" /></Button>
+          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => confirmDeleteProduct(p)}><Trash className="h-3.5 w-3.5" /></Button>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 export default function Webstore() {
   const [aiManager, setAiManager] = useState(true);
   const [search, setSearch] = useState("");
