@@ -213,6 +213,15 @@ export default function Webstore() {
     }
   }, []);
 
+  const filteredSettingsProducts = useMemo(() => {
+    return products.filter(p => {
+      const matchSearch = !settingsSearch || p.name.toLowerCase().includes(settingsSearch.toLowerCase()) || p.sku.toLowerCase().includes(settingsSearch.toLowerCase());
+      const matchCategory = settingsCategory === "Semua" || p.category === settingsCategory;
+      const matchStatus = settingsStatus === "Semua" || (settingsStatus === "active" && p.status === "synced") || (settingsStatus === "syncing" && p.status === "syncing") || (settingsStatus === "out" && p.status === "out");
+      return matchSearch && matchCategory && matchStatus;
+    });
+  }, [products, settingsSearch, settingsCategory, settingsStatus]);
+
   const openProductModal = (p?: Product) => {
     if (p) {
       setPForm({ name: p.name, sku: p.sku, price: String(p.price), stock: String(p.stock), category: p.category, description: p.description, chWebstore: p.channels.webstore, chReseller: p.channels.reseller, chPos: p.channels.pos, imgPreview: p.img });
