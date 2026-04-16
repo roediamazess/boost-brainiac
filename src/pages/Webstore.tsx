@@ -169,6 +169,9 @@ export default function Webstore() {
   const [posCategory, setPosCategory] = useState<string>("Semua");
   const [storeSort, setStoreSort] = useState<SortOption>("default");
   const [posSort, setPosSort] = useState<SortOption>("default");
+  const [settingsSearch, setSettingsSearch] = useState("");
+  const [settingsCategory, setSettingsCategory] = useState<string>("Semua");
+  const [settingsStatus, setSettingsStatus] = useState<string>("Semua");
 
   // Data state
   const [products, setProducts] = useState<Product[]>(initialProducts);
