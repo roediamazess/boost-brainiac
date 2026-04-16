@@ -67,7 +67,47 @@ const categoryLabel = (cat: string) => {
   return found ? `${found.icon} ${found.name}` : cat === "Semua" ? "📦 Semua" : cat;
 };
 
-function SortableProductRow({ p, categoryLabel, openProductModal, confirmDeleteProduct }: {
+function SortableCategoryCard({ cat, products, openCategoryModal, confirmDeleteCategory }: {
+  cat: CategoryItem; products: Product[]; openCategoryModal: (c: CategoryItem) => void; confirmDeleteCategory: (c: CategoryItem) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cat.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+  const count = products.filter(p => p.category === cat.id).length;
+  const activeCount = products.filter(p => p.category === cat.id && p.status !== "out").length;
+  return (
+    <Card ref={setNodeRef} style={style} className="hover:shadow-md transition-shadow">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2.5">
+            <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-0.5 text-muted-foreground hover:text-foreground">
+              <GripVertical className="h-4 w-4" />
+            </button>
+            <span className="text-xl">{cat.icon}</span>
+            <div>
+              <h4 className="font-semibold text-sm">{cat.name}</h4>
+              <p className="text-[10px] text-muted-foreground">{count} produk · {activeCount} aktif</p>
+            </div>
+          </div>
+          <Badge variant="default" className="text-[10px]">Aktif</Badge>
+        </div>
+        <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
+          <span>📦 Stok: {products.filter(p => p.category === cat.id).reduce((s, p) => s + p.stock, 0)}</span>
+          <span>🛒 Terjual: {products.filter(p => p.category === cat.id).reduce((s, p) => s + p.sold, 0)}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {cat.channels.webstore && <Badge variant="outline" className="text-[10px] gap-1"><Store className="h-2.5 w-2.5" /> Webstore</Badge>}
+          {cat.channels.reseller && <Badge variant="outline" className="text-[10px] gap-1"><Users className="h-2.5 w-2.5" /> Reseller</Badge>}
+          {cat.channels.pos && <Badge variant="outline" className="text-[10px] gap-1"><ShoppingCart className="h-2.5 w-2.5" /> POS</Badge>}
+        </div>
+        <div className="flex items-center gap-1.5 mt-3 pt-3 border-t">
+          <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs flex-1" onClick={() => openCategoryModal(cat)}><Pencil className="h-3 w-3" /> Edit</Button>
+          <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-destructive hover:text-destructive" onClick={() => confirmDeleteCategory(cat)}><Trash className="h-3 w-3" /> Hapus</Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
   p: Product; categoryLabel: (cat: string) => string; openProductModal: (p: Product) => void; confirmDeleteProduct: (p: Product) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
