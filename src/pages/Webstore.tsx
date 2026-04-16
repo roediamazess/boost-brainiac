@@ -733,41 +733,15 @@ export default function Webstore() {
                 <Plus className="h-3.5 w-3.5" /> Tambah Kategori
               </Button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {categoryList.map((cat) => {
-                const count = products.filter(p => p.category === cat.id).length;
-                const activeCount = products.filter(p => p.category === cat.id && p.status !== "out").length;
-                return (
-                  <Card key={cat.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2.5">
-                          <span className="text-xl">{cat.icon}</span>
-                          <div>
-                            <h4 className="font-semibold text-sm">{cat.name}</h4>
-                            <p className="text-[10px] text-muted-foreground">{count} produk · {activeCount} aktif</p>
-                          </div>
-                        </div>
-                        <Badge variant="default" className="text-[10px]">Aktif</Badge>
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
-                        <span>📦 Stok: {products.filter(p => p.category === cat.id).reduce((s, p) => s + p.stock, 0)}</span>
-                        <span>🛒 Terjual: {products.filter(p => p.category === cat.id).reduce((s, p) => s + p.sold, 0)}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {cat.channels.webstore && <Badge variant="outline" className="text-[10px] gap-1"><Store className="h-2.5 w-2.5" /> Webstore</Badge>}
-                        {cat.channels.reseller && <Badge variant="outline" className="text-[10px] gap-1"><Users className="h-2.5 w-2.5" /> Reseller</Badge>}
-                        {cat.channels.pos && <Badge variant="outline" className="text-[10px] gap-1"><ShoppingCart className="h-2.5 w-2.5" /> POS</Badge>}
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-3 pt-3 border-t">
-                        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs flex-1" onClick={() => openCategoryModal(cat)}><Pencil className="h-3 w-3" /> Edit</Button>
-                        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-destructive hover:text-destructive" onClick={() => confirmDeleteCategory(cat)}><Trash className="h-3 w-3" /> Hapus</Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCategoryDragEnd}>
+              <SortableContext items={categoryList.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {categoryList.map((cat) => (
+                    <SortableCategoryCard key={cat.id} cat={cat} products={products} openCategoryModal={openCategoryModal} confirmDeleteCategory={confirmDeleteCategory} />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           </div>
 
           {/* Product Management */}
