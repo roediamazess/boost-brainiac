@@ -189,12 +189,22 @@ export default function Webstore() {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
+  const handleProductDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
       setProducts(prev => {
         const oldIndex = prev.findIndex(p => p.id === active.id);
         const newIndex = prev.findIndex(p => p.id === over.id);
+        return arrayMove(prev, oldIndex, newIndex);
+      });
+    }
+  }, []);
+  const handleCategoryDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setCategoryList(prev => {
+        const oldIndex = prev.findIndex(c => c.id === active.id);
+        const newIndex = prev.findIndex(c => c.id === over.id);
         return arrayMove(prev, oldIndex, newIndex);
       });
     }
