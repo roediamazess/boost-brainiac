@@ -18,7 +18,7 @@ import {
   Store, ShoppingCart, Package, RefreshCw, Search,
   Star, Plus, Minus, Trash2, CreditCard, Banknote, QrCode,
   BarChart3, ArrowUpRight, Eye, ShoppingBag, Smartphone,
-  Copy, Check, ExternalLink, Users, Percent, Link as LinkIcon,
+  Copy, Check, ExternalLink, Users, Percent, Link as LinkIcon, GripVertical,
   Settings, ArrowUpDown, Pencil, Trash, FolderPlus, PackagePlus,
   ImagePlus,
 } from "lucide-react";
