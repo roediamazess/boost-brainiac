@@ -108,6 +108,7 @@ function SortableCategoryCard({ cat, products, openCategoryModal, confirmDeleteC
   );
 }
 
+function SortableProductRow({ p, categoryLabel, openProductModal, confirmDeleteProduct }: {
   p: Product; categoryLabel: (cat: string) => string; openProductModal: (p: Product) => void; confirmDeleteProduct: (p: Product) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
