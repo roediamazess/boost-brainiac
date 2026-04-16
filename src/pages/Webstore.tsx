@@ -143,6 +143,22 @@ export default function Webstore() {
   // Category form state
   const [cForm, setCForm] = useState({ name: "", icon: "📦", webstore: true, reseller: true, pos: true });
 
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setProducts(prev => {
+        const oldIndex = prev.findIndex(p => p.id === active.id);
+        const newIndex = prev.findIndex(p => p.id === over.id);
+        return arrayMove(prev, oldIndex, newIndex);
+      });
+    }
+  }, []);
+
   const openProductModal = (p?: Product) => {
     if (p) {
       setPForm({ name: p.name, sku: p.sku, price: String(p.price), stock: String(p.stock), category: p.category, description: p.description, chWebstore: p.channels.webstore, chReseller: p.channels.reseller, chPos: p.channels.pos, imgPreview: p.img });
