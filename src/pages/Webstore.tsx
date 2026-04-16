@@ -758,7 +758,7 @@ export default function Webstore() {
             <Card>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
-                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleProductDragEnd}>
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b bg-muted/30 text-xs text-muted-foreground">
