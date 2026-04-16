@@ -169,6 +169,9 @@ export default function Webstore() {
   const [posCategory, setPosCategory] = useState<string>("Semua");
   const [storeSort, setStoreSort] = useState<SortOption>("default");
   const [posSort, setPosSort] = useState<SortOption>("default");
+  const [settingsSearch, setSettingsSearch] = useState("");
+  const [settingsCategory, setSettingsCategory] = useState<string>("Semua");
+  const [settingsStatus, setSettingsStatus] = useState<string>("Semua");
 
   // Data state
   const [products, setProducts] = useState<Product[]>(initialProducts);
@@ -209,6 +212,15 @@ export default function Webstore() {
       });
     }
   }, []);
+
+  const filteredSettingsProducts = useMemo(() => {
+    return products.filter(p => {
+      const matchSearch = !settingsSearch || p.name.toLowerCase().includes(settingsSearch.toLowerCase()) || p.sku.toLowerCase().includes(settingsSearch.toLowerCase());
+      const matchCategory = settingsCategory === "Semua" || p.category === settingsCategory;
+      const matchStatus = settingsStatus === "Semua" || (settingsStatus === "active" && p.status === "synced") || (settingsStatus === "syncing" && p.status === "syncing") || (settingsStatus === "out" && p.status === "out");
+      return matchSearch && matchCategory && matchStatus;
+    });
+  }, [products, settingsSearch, settingsCategory, settingsStatus]);
 
   const openProductModal = (p?: Product) => {
     if (p) {
@@ -755,6 +767,28 @@ export default function Webstore() {
                 <Plus className="h-3.5 w-3.5" /> Tambah Produk
               </Button>
             </div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+              <div className="relative flex-1 w-full sm:max-w-xs">
+                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                <Input placeholder="Cari nama atau SKU..." className="pl-8 h-9 text-xs" value={settingsSearch} onChange={e => setSettingsSearch(e.target.value)} />
+              </div>
+              <Select value={settingsCategory} onValueChange={setSettingsCategory}>
+                <SelectTrigger className="w-[140px] h-9 text-xs"><SelectValue placeholder="Kategori" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Semua">Semua Kategori</SelectItem>
+                  {categoryList.map(c => <SelectItem key={c.id} value={c.id}>{c.icon} {c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={settingsStatus} onValueChange={setSettingsStatus}>
+                <SelectTrigger className="w-[130px] h-9 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Semua">Semua Status</SelectItem>
+                  <SelectItem value="active">✓ Aktif</SelectItem>
+                  <SelectItem value="syncing">⟳ Sync</SelectItem>
+                  <SelectItem value="out">✕ Habis</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Card>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
@@ -773,11 +807,14 @@ export default function Webstore() {
                           <th className="text-center py-3 px-4 font-medium">Aksi</th>
                         </tr>
                       </thead>
-                      <SortableContext items={products.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                      <SortableContext items={filteredSettingsProducts.map(p => p.id)} strategy={verticalListSortingStrategy}>
                         <tbody>
-                          {products.map((p) => (
+                          {filteredSettingsProducts.map((p) => (
                             <SortableProductRow key={p.id} p={p} categoryLabel={categoryLabel} openProductModal={openProductModal} confirmDeleteProduct={confirmDeleteProduct} />
                           ))}
+                          {filteredSettingsProducts.length === 0 && (
+                            <tr><td colSpan={9} className="py-8 text-center text-sm text-muted-foreground">Tidak ada produk yang cocok dengan filter.</td></tr>
+                          )}
                         </tbody>
                       </SortableContext>
                     </table>
